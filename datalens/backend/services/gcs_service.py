@@ -103,6 +103,8 @@ def _detect_local_dev() -> bool:
 def get_gcs_client():
     """Return (and lazily initialise) the GCS Storage client."""
     global _gcs_client
+    if _detect_local_dev():
+        return None
     if _gcs_client is None:
         from google.cloud import storage
         _gcs_client = storage.Client()
@@ -112,6 +114,8 @@ def get_gcs_client():
 def get_firestore_client():
     """Return (and lazily initialise) the Firestore client."""
     global _firestore_client
+    if _detect_local_dev():
+        return None
     if _firestore_client is None:
         from google.cloud import firestore
         _firestore_client = firestore.Client()

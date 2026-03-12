@@ -32,7 +32,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 # Load environment variables as early as possible so all modules see them
-load_dotenv()
+load_dotenv(override=True)
 
 # ---------------------------------------------------------------------------
 # Logging configuration
@@ -132,8 +132,11 @@ async def lifespan(app: FastAPI):
     """Application lifespan: run startup tasks, then yield, then shutdown."""
     logger.info("DataLens backend starting up…")
 
-    await _init_gcs_client()
-    await _init_firestore_client()
+    if os.environ.get("GCS_LOCAL_DEV", "").lower() not in ("1", "true", "yes"):
+        await _init_gcs_client()
+        await _init_firestore_client()
+    else:
+        logger.info("Local development mode: skipping GCS/Firestore pre-warm.")
 
     logger.info(
         "DataLens backend ready. Environment: project=%s, location=%s",

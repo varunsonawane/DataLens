@@ -11,16 +11,13 @@ from __future__ import annotations
 import logging
 from typing import Any, Optional
 
-import pathlib
 
 from fastapi import APIRouter, HTTPException, status
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
-from services.gcs_service import load_session, save_session
+from services.gcs_service import load_session, save_session, _LOCAL_IMAGES_DIR
 from services.nano_banana import generate_image_on_demand
-
-_LOCAL_IMAGES_DIR = pathlib.Path("/tmp/datalens-images")
 
 logger = logging.getLogger(__name__)
 

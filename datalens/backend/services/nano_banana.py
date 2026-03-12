@@ -35,14 +35,10 @@ _client: genai.Client | None = None
 
 
 def _get_client() -> genai.Client:
-    global _client
-    if _client is None:
-        api_key = os.environ.get("GENAI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
-        if api_key:
-            _client = genai.Client(api_key=api_key)
-        else:
-            _client = genai.Client()
-    return _client
+    api_key = os.environ.get("GENAI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+    if api_key:
+        return genai.Client(api_key=api_key)
+    return genai.Client()
 
 
 # ---------------------------------------------------------------------------
@@ -120,7 +116,7 @@ async def _generate_image_bytes(enriched_prompt: str) -> bytes:
     client = _get_client()
 
     response = await client.aio.models.generate_content(
-        model="gemini-3-pro-image-preview",
+        model="gemini-2.5-flash-image",
         contents=[
             types.Content(
                 role="user",
