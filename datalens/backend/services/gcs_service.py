@@ -42,9 +42,21 @@ FIRESTORE_COLLECTION: str = os.environ.get("FIRESTORE_COLLECTION", "sessions")
 _LOCAL_DEV_ENV: str = os.environ.get("GCS_LOCAL_DEV", "").lower()
 _LOCAL_DEV_FORCED: bool = _LOCAL_DEV_ENV in ("1", "true", "yes")
 
-# Local paths
-_LOCAL_SESSIONS_DIR: pathlib.Path = pathlib.Path("/tmp/datalens-sessions")
-_LOCAL_IMAGES_DIR: pathlib.Path = pathlib.Path("/tmp/datalens-images")
+import tempfile
+
+# Local paths - Use a project-relative 'tmp' if possible, else fallback to system temp
+_REPO_ROOT = pathlib.Path(__file__).parent.parent.parent
+_DEFAULT_TMP = _REPO_ROOT / "tmp"
+
+_LOCAL_SESSIONS_DIR: pathlib.Path = _DEFAULT_TMP / "datalens-sessions"
+_LOCAL_IMAGES_DIR: pathlib.Path = _DEFAULT_TMP / "datalens-images"
+
+if not os.access(_REPO_ROOT, os.W_OK):
+    # Fallback to system temp if repo root is not writable
+    _SYS_TMP = pathlib.Path(tempfile.gettempdir())
+    _LOCAL_SESSIONS_DIR = _SYS_TMP / "datalens-sessions"
+    _LOCAL_IMAGES_DIR = _SYS_TMP / "datalens-images"
+
 _LOCAL_FIRESTORE_INDEX: pathlib.Path = _LOCAL_SESSIONS_DIR / "_firestore_index.json"
 
 # ---------------------------------------------------------------------------
