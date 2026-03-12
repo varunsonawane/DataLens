@@ -1,0 +1,137 @@
+# =============================================================================
+# DataLens Cloud Build CI/CD Pipeline
+# =============================================================================
+# Pipeline stages:
+#   1. Build Docker image (with layer caching)
+#   2. Push versioned SHA tag to Artifact Registry
+#   3. Push 'latest' tag to Artifact Registry
+#   4. Deploy to Cloud Run
+#   5. Verify deployment health
+#
+# Set these substitutions in your Cloud Build trigger:
+#   _IMAGE_PATH        — Artifact Registry image path (without tag)
+#   _REGION            — GCP region  (default: us-central1)
+#   _SESSIONS_BUCKET   — GCS sessions bucket name
+#   _IMAGES_BUCKET     — GCS images bucket name
+#   _VERTEX_ENDPOINT_ID — Vertex AI index endpoint ID (optional)
+#   _DEPLOYED_INDEX_ID  — Vertex AI deployed index ID
+# =============================================================================
+
+steps:
+  # ---------------------------------------------------------------------------
+  # Step 1: Build the Docker image
+  # ---------------------------------------------------------------------------
+  - name: "gcr.io/cloud-builders/docker"
+    id: "build"
+    args:
+      - build
+      - "--platform"
+      - "linux/amd64"
+      - "-t"
+      - "$_IMAGE_PATH:$SHORT_SHA"
+      - "-t"
+      - "$_IMAGE_PATH:latest"
+      - "--cache-from"
+      - "$_IMAGE_PATH:latest"
+      - "./backend/"
+
+  # ---------------------------------------------------------------------------
+  # Step 2: Push the versioned image tag
+  # ---------------------------------------------------------------------------
+  - name: "gcr.io/cloud-builders/docker"
+    id: "push-sha"
+    waitFor:
+      - build
+    args:
+      - push
+      - "$_IMAGE_PATH:$SHORT_SHA"
+
+  # ---------------------------------------------------------------------------
+  # Step 3: Push the 'latest' tag
+  # ---------------------------------------------------------------------------
+  - name: "gcr.io/cloud-builders/docker"
+    id: "push-latest"
+    waitFor:
+      - build
+    args:
+      - push
+      - "$_IMAGE_PATH:latest"
+
+  # ---------------------------------------------------------------------------
+  # Step 4: Deploy to Cloud Run
+  # ---------------------------------------------------------------------------
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    id: "deploy"
+    waitFor:
+      - push-sha
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - datalens-backend
+      - "--image=$_IMAGE_PATH:$SHORT_SHA"
+      - "--region=$_REGION"
+      - "--platform=managed"
+      - "--allow-unauthenticated"
+      - "--memory=2Gi"
+      - "--cpu=2"
+      - "--min-instances=0"
+      - "--max-instances=10"
+      - "--concurrency=80"
+      - "--timeout=300"
+      - "--set-env-vars=GOOGLE_CLOUD_PROJECT=$PROJECT_ID,GOOGLE_CLOUD_LOCATION=$_REGION,GCS_BUCKET_SESSIONS=$_SESSIONS_BUCKET,GCS_BUCKET_IMAGES=$_IMAGES_BUCKET,FIRESTORE_COLLECTION=sessions,VERTEX_AI_DEPLOYED_INDEX_ID=$_DEPLOYED_INDEX_ID,VERTEX_AI_INDEX_ENDPOINT_ID=$_VERTEX_ENDPOINT_ID"
+      - "--quiet"
+
+  # ---------------------------------------------------------------------------
+  # Step 5: Verify deployment health
+  # ---------------------------------------------------------------------------
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    id: "verify"
+    waitFor:
+      - deploy
+    entrypoint: bash
+    args:
+      - "-c"
+      - |
+        SERVICE_URL=$(gcloud run services describe datalens-backend \
+          --region=$_REGION \
+          --format="value(status.url)" \
+          --quiet)
+        echo "Service deployed at: $${SERVICE_URL}"
+        HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$${SERVICE_URL}/healthz" || echo "000")
+        echo "Health check HTTP status: $${HTTP_CODE}"
+        if [ "$${HTTP_CODE}" != "200" ]; then
+          echo "WARNING: Health check returned $${HTTP_CODE} — service may still be warming up."
+        fi
+
+# ---------------------------------------------------------------------------
+# Substitution variables (override at trigger or build time)
+# ---------------------------------------------------------------------------
+substitutions:
+  _IMAGE_PATH: "us-central1-docker.pkg.dev/$PROJECT_ID/datalens-backend/datalens-backend"
+  _REGION: "us-central1"
+  _SESSIONS_BUCKET: "$PROJECT_ID-datalens-sessions"
+  _IMAGES_BUCKET: "$PROJECT_ID-datalens-images"
+  _VERTEX_ENDPOINT_ID: ""
+  _DEPLOYED_INDEX_ID: "datalens_rag_deployed"
+
+# ---------------------------------------------------------------------------
+# Build options
+# ---------------------------------------------------------------------------
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: "E2_HIGHCPU_8"
+  substitution_option: "ALLOW_LOOSE"
+  dynamic_substitutions: true
+
+# ---------------------------------------------------------------------------
+# Build timeout (10 minutes)
+# ---------------------------------------------------------------------------
+timeout: "600s"
+
+# ---------------------------------------------------------------------------
+# Images to push
+# ---------------------------------------------------------------------------
+images:
+  - "$_IMAGE_PATH:$SHORT_SHA"
+  - "$_IMAGE_PATH:latest"

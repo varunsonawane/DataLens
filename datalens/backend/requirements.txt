@@ -1,0 +1,31 @@
+# DataLens Backend — Direct Dependencies
+# Generated from venv (Python 3.13) — Feb 2026
+# Install: pip install -r requirements.txt
+
+# --- Web Framework ---
+fastapi==0.131.0
+uvicorn[standard]==0.41.0
+python-multipart==0.0.9
+sse-starlette==3.0.3
+
+# --- Data Processing ---
+pandas==3.0.1
+numpy==2.4.2
+openpyxl==3.1.5
+
+# --- Google AI / Gemini ---
+google-genai==1.64.0
+google-adk==1.25.1
+
+# --- Google Cloud ---
+google-cloud-storage==3.9.0
+google-cloud-firestore==2.23.0
+google-cloud-aiplatform==1.138.0
+
+# --- Utilities ---
+pydantic==2.12.5
+python-dotenv==1.0.1
+aiofiles==25.1.0
+httpx==0.28.1
+websockets==15.0.1
+sqlalchemy==2.0.46

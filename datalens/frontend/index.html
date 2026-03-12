@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#030712" />
+    <meta name="description" content="DataLens — Multimodal AI Data Storytelling Platform powered by Gemini" />
+    <meta property="og:title" content="DataLens" />
+    <meta property="og:description" content="Transform your data into compelling stories with AI" />
+    <title>DataLens — AI Data Storytelling</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        background-color: #030712;
+        color: #f9fafb;
+        font-family: 'Inter', system-ui, sans-serif;
+        height: 100%;
+        overflow: hidden;
+      }
+      #root {
+        height: 100%;
+      }
+    </style>
+    <script>
+      (function() {
+        try {
+          var savedTheme = localStorage.getItem('datalens-theme') || 'dark';
+          if (savedTheme === 'dark') {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.add('light');
+          }
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
