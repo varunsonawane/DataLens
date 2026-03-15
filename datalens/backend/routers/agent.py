@@ -42,7 +42,8 @@ import json
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
+from dependencies.auth import get_owner_id
 
 from services.live_agent import cleanup_agent, get_or_create_agent
 
@@ -55,7 +56,7 @@ _STOP_SENTINEL = None
 
 
 @router.websocket("/ws/agent/{session_id}")
-async def agent_websocket(websocket: WebSocket, session_id: str) -> None:
+async def agent_websocket(websocket: WebSocket, session_id: str, token: Optional[str] = Query(None)) -> None:
     """
     Bidirectional WebSocket for the DataLens voice / text agent.
 
@@ -64,7 +65,15 @@ async def agent_websocket(websocket: WebSocket, session_id: str) -> None:
     API; text frames are processed by DataLensLiveAgent.process_text_message().
     """
     await websocket.accept()
-    logger.info("WebSocket connected: session=%s", session_id)
+    logger.info("WebSocket connected: session=%s, raw_token=%s", session_id, token)
+    
+    owner_id = None
+    if token and token != "none":
+        auth_header = f"Guest {token}" if token.startswith("guest_") else f"Bearer {token}"
+        owner_id = await get_owner_id(authorization=auth_header)
+        logger.info("WebSocket auth resolved token to owner_id=%s using header=%s", owner_id, auth_header)
+    else:
+        logger.warning("WebSocket token missing or None! owner_id will be None")
 
     # Queue shared between receive_loop and send_loop
     send_queue: asyncio.Queue[Optional[dict]] = asyncio.Queue(maxsize=256)
@@ -100,7 +109,7 @@ async def agent_websocket(websocket: WebSocket, session_id: str) -> None:
             if live_session is not None:
                 return live_session
             try:
-                agent = await get_or_create_agent(session_id)
+                agent = await get_or_create_agent(session_id, owner_id=owner_id)
                 live_session_ctx = agent.start_live_session()
                 live_session = await live_session_ctx.__aenter__()
                 logger.info("Gemini Live API session opened for %s.", session_id)
@@ -163,7 +172,7 @@ async def agent_websocket(websocket: WebSocket, session_id: str) -> None:
                         continue
                     # Process asynchronously so we can keep receiving while responding
                     asyncio.create_task(
-                        _handle_text_message(content, session_id, send_queue)
+                        _handle_text_message(content, session_id, send_queue, owner_id=owner_id)
                     )
 
                 elif msg_type == "audio":
@@ -264,6 +273,7 @@ async def _handle_text_message(
     content: str,
     session_id: str,
     send_queue: asyncio.Queue,
+    owner_id: Optional[str] = None,
 ) -> None:
     """
     Process a user text message with DataLensLiveAgent and push response
@@ -272,7 +282,7 @@ async def _handle_text_message(
     a single coherent message bubble.
     """
     try:
-        agent = await get_or_create_agent(session_id)
+        agent = await get_or_create_agent(session_id, owner_id=owner_id)
         async for chunk in agent.process_text_message(content):
             try:
                 await asyncio.wait_for(send_queue.put(chunk), timeout=5.0)

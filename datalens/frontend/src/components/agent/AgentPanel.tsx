@@ -121,15 +121,24 @@ export function AgentPanel({ variant = 'sidebar' }: AgentPanelProps) {
     }
   }, [addConversationMessage, isConnected, sendText]);
 
-  // Clear responding flag when agent replies
+  // Clear responding flag when agent replies or when orb returns to listening (e.g. error)
   const prevCount = useRef(conversationHistory.length);
   useEffect(() => {
     if (
       conversationHistory.length > prevCount.current &&
       conversationHistory[conversationHistory.length - 1]?.role === 'agent'
-    ) setIsResponding(false);
+    ) {
+      setIsResponding(false);
+    }
     prevCount.current = conversationHistory.length;
   }, [conversationHistory]);
+
+  // Gracefully clear "Thinking..." if the agent encounters an error and returns to listening
+  useEffect(() => {
+    if (voiceOrbState === 'listening') {
+      setIsResponding(false);
+    }
+  }, [voiceOrbState]);
 
   // ── Drag & Drop ──────────────────────────────────────────────────────────
   const handleDragOver = useCallback((e: React.DragEvent) => { e.preventDefault(); setIsDragOver(true); }, []);
@@ -142,7 +151,7 @@ export function AgentPanel({ variant = 'sidebar' }: AgentPanelProps) {
       if (data) {
         const { session_id, filename } = JSON.parse(data);
         if (session_id && session_id !== sessionId) {
-          if (sessionId === 'global_agent') {
+          if (sessionId?.startsWith('agent_') || sessionId === 'global_agent') {
             addConversationMessage({
               id: crypto.randomUUID(),
               role: 'user',

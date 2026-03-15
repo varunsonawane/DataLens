@@ -135,7 +135,7 @@ export function SidebarContent() {
                   if (link.id === 'upload') handleNewSession();
                   else if (link.id === 'story') setDashboardMode('directory');
                   else if (link.id === 'ai') {
-                    setSessionId('global_agent');
+                    setSessionId(`agent_${crypto.randomUUID()}`);
                     setDashboardMode('ai');
                   }
                 }}

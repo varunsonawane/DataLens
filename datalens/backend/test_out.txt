@@ -1,0 +1,7 @@
+Connecting to ws://localhost:8080/ws/agent/agent_test_ws_2?token=7567603a-468c-4822-8e52-10ba13490e6f...
+Connected.
+Sent context prompt.
+Received: {"type":"connected","session_id":"agent_test_ws_2"}
+Received: {"type":"text_response","content":"Got it! I'm ready to analyze your `bank_transactions_data` (Session ID: 9591"}
+Received: {"type":"text_response","content":"bf11). What would you like to explore or visualize today?"}
+Received: {"type":"text_done"}

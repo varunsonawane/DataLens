@@ -149,7 +149,7 @@ export function ChatHistoryPanel({ onDragSession, className }: ChatHistoryPanelP
   const loadSessions = useCallback(async () => {
     setLoading(true);
     try {
-      const resp = await axios.get<SessionListItem[]>(`${BACKEND_URL}/sessions`, {
+      const resp = await axios.get<SessionListItem[]>(`${BACKEND_URL}/sessions?type=all`, {
         headers: authHeaders(),
       });
       setSessions(resp.data || []);

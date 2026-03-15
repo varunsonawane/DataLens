@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useSessionStore } from '../store/sessionStore';
+import { useAuthStore } from '../store/authStore';
 import type { AgentMessage, ConversationMessage } from '../types';
 
 const WS_URL = import.meta.env.VITE_WS_URL || 'ws://127.0.0.1:8080';
@@ -47,6 +48,7 @@ export function useVoiceAgent(): UseVoiceAgentReturn {
   const sessionIdRef = useRef<string | null>(null);
   const isManualDisconnectRef = useRef(false);
   const isMicEnabledRef = useRef(false);
+  const authKey = useAuthStore((s) => s.appToken ?? s.guestId ?? 'none');
 
   const {
     setVoiceOrbState,
@@ -201,7 +203,7 @@ export function useVoiceAgent(): UseVoiceAgentReturn {
       sessionIdRef.current = sessionId;
       isManualDisconnectRef.current = false;
 
-      const url = `${WS_URL}/ws/agent/${sessionId}`;
+      const url = `${WS_URL}/ws/agent/${sessionId}?token=${authKey}`;
       const ws = new WebSocket(url);
       wsRef.current = ws;
 
@@ -240,7 +242,7 @@ export function useVoiceAgent(): UseVoiceAgentReturn {
         }
       };
     },
-    [handleMessage]
+    [handleMessage, authKey]
   );
 
   // --- Send text over WebSocket ---

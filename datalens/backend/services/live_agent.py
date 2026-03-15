@@ -208,8 +208,9 @@ class DataLensLiveAgent:
     Gemini Live API bidirectional session for voice streaming.
     """
 
-    def __init__(self, session_id: str) -> None:
+    def __init__(self, session_id: str, owner_id: Optional[str] = None) -> None:
         self.session_id: str = session_id
+        self.owner_id: Optional[str] = owner_id
         self.session_data: Optional[dict] = None
         self.story_context: str = ""
         self._initial_context: str = ""
@@ -275,7 +276,7 @@ class DataLensLiveAgent:
 
     def _build_system_prompt(self) -> str:
         """Construct the full system prompt incorporating session context."""
-        if self.session_id == "global_agent":
+        if self.session_id.startswith("agent_"):
             return f"""You are the DataLens Global AI Assistant. You are a highly intelligent data analyst and storyteller.
 You have access to ALL datasets the user has ever uploaded and analyzed.
 
@@ -408,6 +409,7 @@ The current session ID is: {self.session_id}
         await append_conversation_message(
             self.session_id,
             {"role": "user", "content": text},
+            owner_id=self.owner_id,
         )
 
         if _adk_available and self._adk_runner is not None:
@@ -478,6 +480,7 @@ The current session ID is: {self.session_id}
                 await append_conversation_message(
                     self.session_id,
                     {"role": "assistant", "content": full_response_text},
+                    owner_id=self.owner_id,
                 )
 
         except Exception as exc:
@@ -550,6 +553,7 @@ The current session ID is: {self.session_id}
                 await append_conversation_message(
                     self.session_id,
                     {"role": "assistant", "content": full_response},
+                    owner_id=self.owner_id,
                 )
 
         except Exception as exc:
@@ -603,7 +607,7 @@ _agent_sessions: dict[str, DataLensLiveAgent] = {}
 _agent_locks: dict[str, asyncio.Lock] = {}
 
 
-async def get_or_create_agent(session_id: str) -> DataLensLiveAgent:
+async def get_or_create_agent(session_id: str, owner_id: Optional[str] = None) -> DataLensLiveAgent:
     """
     Return the existing DataLensLiveAgent for the session, or create and
     initialise a new one.
@@ -623,7 +627,7 @@ async def get_or_create_agent(session_id: str) -> DataLensLiveAgent:
         if session_id in _agent_sessions:
             return _agent_sessions[session_id]
 
-        agent = DataLensLiveAgent(session_id)
+        agent = DataLensLiveAgent(session_id, owner_id=owner_id)
         try:
             await agent.initialize()
         except Exception as exc:

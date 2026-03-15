@@ -104,10 +104,10 @@ class OperationResult(BaseModel):
         "in local-dev mode)."
     ),
 )
-async def list_all_sessions(owner_id: _Opt[str] = Depends(get_owner_id)) -> List[SessionListItem]:
+async def list_all_sessions(type: str = "all", owner_id: _Opt[str] = Depends(get_owner_id)) -> List[SessionListItem]:
     """List sessions for the current owner, ordered by created_at descending."""
     try:
-        raw_sessions = await list_sessions(owner_id=owner_id)
+        raw_sessions = await list_sessions(owner_id=owner_id, session_type=type)
         return [
             SessionListItem(
                 session_id=s.get("session_id", ""),

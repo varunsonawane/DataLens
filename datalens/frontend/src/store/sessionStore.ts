@@ -225,7 +225,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
 
   clearChat: () => set({
     currentSession: null,
-    sessionId: crypto.randomUUID(),
+    sessionId: `agent_${crypto.randomUUID()}`,
     dataProfile: null,
     conversationHistory: [],
     pendingImages: new Map(),

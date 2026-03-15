@@ -1,27 +1,23 @@
 import asyncio
 import websockets
-import json
 
 async def test_ws():
-    uri = "ws://127.0.0.1:8080/ws/agent/global_agent"
+    uri = "ws://localhost:8080/ws/agent/agent_test_ws_2?token=7567603a-468c-4822-8e52-10ba13490e6f"
+    print(f"Connecting to {uri}...")
     try:
         async with websockets.connect(uri) as websocket:
             print("Connected.")
-            msg = await websocket.recv()
-            print(f"Received: {msg}")
-            
-            # Send text
-            await websocket.send(json.dumps({
-                "type": "text",
-                "content": "Hello agent!"
-            }))
-            
+            payload_text = "Please consider my past chat history from dataset: **bank_transactions_data** (Session ID: 9591bf11) in your reasoning."
+            import json
+            await websocket.send(json.dumps({"id": "1", "role": "user", "content": payload_text, "type": "text"}))
+            print("Sent context prompt.")
             while True:
-                msg = await websocket.recv()
-                print(f"Received: {msg}")
-                if "error" in msg.lower() or "response" in msg.lower():
+                res = await websocket.recv()
+                print("Received:", res)
+                if "text_done" in res or "error" in res:
                     break
     except Exception as e:
-        print(f"Error: {e}")
+        print("Error:", e)
 
-asyncio.run(test_ws())
+if __name__ == "__main__":
+    asyncio.run(test_ws())

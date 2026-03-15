@@ -409,21 +409,23 @@ async def _local_load_session(session_id: str) -> Optional[dict]:
 # ---------------------------------------------------------------------------
 
 
-async def list_sessions(owner_id: Optional[str] = None) -> List[dict]:
+async def list_sessions(owner_id: Optional[str] = None, session_type: str = "all") -> List[dict]:
     """
     Return all session metadata documents, ordered by created_at descending.
 
     Cloud mode : queries the Firestore 'sessions' collection.
     Local mode : reads the JSON index file at /tmp/datalens-sessions/_firestore_index.json.
-
-    Returns
-    -------
-    list[dict]
-        Each item matches the Firestore session document schema:
-        { session_id, filename, created_at, preview_text, image_count, thumbnail_url }
+    
+    session_type : "data" (excludes agent_ prefix), "agent" (only agent_ prefix), or "all"
     """
     if _detect_local_dev():
-        return await _local_list_sessions(owner_id)
+        # Quick hack for local fallback
+        res = await _local_list_sessions(owner_id)
+        if session_type == "data":
+            return [r for r in res if not str(r.get("session_id", "")).startswith("agent_")]
+        elif session_type == "agent":
+            return [r for r in res if str(r.get("session_id", "")).startswith("agent_")]
+        return res
 
     loop = asyncio.get_event_loop()
 
@@ -438,7 +440,13 @@ async def list_sessions(owner_id: Optional[str] = None) -> List[dict]:
                 .order_by("created_at", direction="DESCENDING")
                 .stream()
             )
-            return [doc.to_dict() for doc in docs]
+            res = [doc.to_dict() for doc in docs]
+            logger.info("list_sessions: found %d total sessions for owner_id %s. types asked=%s", len(res), owner_id, session_type)
+            if session_type == "data":
+                return [r for r in res if not str(r.get("session_id", "")).startswith("agent_")]
+            elif session_type == "agent":
+                return [r for r in res if str(r.get("session_id", "")).startswith("agent_")]
+            return res
         except Exception as exc:
             logger.error("list_sessions Firestore error: %s", exc)
             return []
@@ -552,7 +560,7 @@ async def _local_delete_session(session_id: str) -> bool:
 # ---------------------------------------------------------------------------
 
 
-async def append_conversation_message(session_id: str, message: dict) -> bool:
+async def append_conversation_message(session_id: str, message: dict, owner_id: Optional[str] = None) -> bool:
     """
     Append a single message to the session's conversation_history and
     re-persist the updated session.
@@ -585,7 +593,7 @@ async def append_conversation_message(session_id: str, message: dict) -> bool:
     history.append(message)
     session["conversation_history"] = history
 
-    return await save_session(session_id, session)
+    return await save_session(session_id, session, owner_id=owner_id)
 
 
 # ---------------------------------------------------------------------------

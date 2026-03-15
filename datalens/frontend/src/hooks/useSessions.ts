@@ -28,11 +28,11 @@ export function useSessions(): UseSessionsReturn {
   // Re-fetch sessions when auth state changes (login/logout/guest)
   const authKey = useAuthStore((s) => s.appToken ?? s.guestId ?? 'none');
 
-  const refreshSessions = useCallback(async () => {
+  const refreshSessions = useCallback(async (type: 'all' | 'data' | 'agent' = 'all') => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await axios.get<SessionListItem[]>(`${BACKEND_URL}/sessions`, {
+      const response = await axios.get<SessionListItem[]>(`${BACKEND_URL}/sessions?type=${type}`, {
         headers: authHeaders(),
       });
       setSessionList(response.data);
@@ -102,7 +102,8 @@ export function useSessions(): UseSessionsReturn {
 
   // Refresh when component mounts or auth state changes
   useEffect(() => {
-    refreshSessions();
+    // Only refresh 'data' sessions by default for the global store/sidebar
+    refreshSessions('data');
   }, [refreshSessions, authKey]);
 
   return { sessions: sessionList, loadSession, deleteSession, refreshSessions, isLoading, error };
