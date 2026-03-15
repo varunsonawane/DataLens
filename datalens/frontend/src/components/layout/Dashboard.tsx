@@ -111,7 +111,7 @@ export function Dashboard() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.98 }}
                 transition={{ duration: 0.3 }}
-                className="flex-1 flex flex-col overflow-hidden p-6"
+                className="flex-1 flex flex-col overflow-hidden"
               >
                 <AgentPanel variant="center" />
               </motion.div>
@@ -119,8 +119,8 @@ export function Dashboard() {
           </AnimatePresence>
         </div>
 
-        {/* Right panel — Agent (hidden on upload and global agent pages) */}
-        {(dashboardMode === 'session' || dashboardMode === 'directory') && (
+        {/* Right panel — Agent (only on session page) */}
+        {dashboardMode === 'session' && (
           <AgentPanel variant="sidebar" />
         )}
       </div>

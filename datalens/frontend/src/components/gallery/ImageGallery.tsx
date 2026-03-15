@@ -220,71 +220,98 @@ export function ImageGallery() {
           style={{ scrollbarWidth: 'none' }}
         >
           {/* Pending skeleton cards */}
-          {pending.map(([id, p]) => {
-            const fmt = getFormatStyle(p.format);
-            return (
-              <div
-                key={id}
-                className="flex-shrink-0 w-36 h-24 rounded-xl shimmer relative overflow-hidden border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-800/40 transition-colors"
-              >
-                <div className="absolute inset-0 flex flex-col items-center justify-center p-2 gap-1">
-                  <Sparkles size={14} style={{ color: fmt.color, opacity: 0.7 }} />
-                  <p className="text-[9px] text-center line-clamp-2 text-slate-500 dark:text-slate-400 transition-colors">
-                    {p.prompt}
-                  </p>
+          {(() => {
+            const formatOrder = ['eli5', 'architecture', 'analyst'];
+            const sortedPending = [...pending].sort((a, b) => {
+              const formatA = a[1].format || 'eli5';
+              const formatB = b[1].format || 'eli5';
+              const indexA = formatOrder.indexOf(formatA);
+              const indexB = formatOrder.indexOf(formatB);
+              // Fallback for unknown formats
+              const finalA = indexA === -1 ? 999 : indexA;
+              const finalB = indexB === -1 ? 999 : indexB;
+              return finalA - finalB;
+            });
+
+            return sortedPending.map(([id, p]) => {
+              const fmt = getFormatStyle(p.format);
+              return (
+                <div
+                  key={id}
+                  className="flex-shrink-0 w-36 h-24 rounded-xl shimmer relative overflow-hidden border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-800/40 transition-colors"
+                >
+                  <div className="absolute inset-0 flex flex-col items-center justify-center p-2 gap-1">
+                    <Sparkles size={14} style={{ color: fmt.color, opacity: 0.7 }} />
+                    <p className="text-[9px] text-center line-clamp-2 text-slate-500 dark:text-slate-400 transition-colors">
+                      {p.prompt}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            });
+          })()}
 
           {/* Resolved image cards */}
-          {resolvedImages.map((img, idx) => {
-            const fmt = getFormatStyle(img.format);
-            return (
-              <motion.div
-                key={img.id}
-                initial={{ opacity: 0, scale: 0.85, y: 8 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                transition={{ delay: idx * 0.05, type: 'spring', stiffness: 300, damping: 22 }}
-                className="flex-shrink-0 w-36 h-24 rounded-xl overflow-hidden cursor-pointer relative group border border-slate-200 dark:border-slate-700/50 hover:border-emerald-500 dark:hover:border-emerald-500/50 transition-colors"
-                style={{
-                  transition: 'transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease',
-                  transformStyle: 'preserve-3d',
-                }}
-                onMouseMove={tilt}
-                onMouseLeave={untilt}
-                onClick={() => setLightbox(img)}
-              >
-                <img
-                  src={img.url}
-                  alt={img.prompt}
-                  className="w-full h-full object-cover"
-                />
+          {(() => {
+            const formatOrder = ['eli5', 'architecture', 'analyst'];
+            const sortedResolved = [...resolvedImages].sort((a, b) => {
+              const formatA = a.format || 'eli5';
+              const formatB = b.format || 'eli5';
+              const indexA = formatOrder.indexOf(formatA);
+              const indexB = formatOrder.indexOf(formatB);
+              const finalA = indexA === -1 ? 999 : indexA;
+              const finalB = indexB === -1 ? 999 : indexB;
+              return finalA - finalB;
+            });
 
-                {/* Hover overlay */}
-                <div
-                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-                  style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(2px)' }}
+            return sortedResolved.map((img, idx) => {
+              const fmt = getFormatStyle(img.format);
+              return (
+                <motion.div
+                  key={img.id}
+                  initial={{ opacity: 0, scale: 0.85, y: 8 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  transition={{ delay: idx * 0.05, type: 'spring', stiffness: 300, damping: 22 }}
+                  className="flex-shrink-0 w-36 h-24 rounded-xl overflow-hidden cursor-pointer relative group border border-slate-200 dark:border-slate-700/50 hover:border-emerald-500 dark:hover:border-emerald-500/50 transition-colors"
+                  style={{
+                    transition: 'transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease',
+                    transformStyle: 'preserve-3d',
+                  }}
+                  onMouseMove={tilt}
+                  onMouseLeave={untilt}
+                  onClick={() => setLightbox(img)}
                 >
-                  <ZoomIn size={20} className="text-white" />
-                </div>
+                  <img
+                    src={img.url}
+                    alt={img.prompt}
+                    className="w-full h-full object-cover"
+                  />
 
-                {/* Format badge */}
-                <div className="absolute bottom-1.5 left-1.5">
-                  <span
-                    className="text-[9px] px-1.5 py-0.5 rounded-full font-semibold"
-                    style={{
-                      background: fmt.bg,
-                      color: fmt.color,
-                      backdropFilter: 'blur(4px)',
-                    }}
+                  {/* Hover overlay */}
+                  <div
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                    style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(2px)' }}
                   >
-                    {fmt.label}
-                  </span>
-                </div>
-              </motion.div>
-            );
-          })}
+                    <ZoomIn size={20} className="text-white" />
+                  </div>
+
+                  {/* Format badge */}
+                  <div className="absolute bottom-1.5 left-1.5">
+                    <span
+                      className="text-[9px] px-1.5 py-0.5 rounded-full font-semibold"
+                      style={{
+                        background: fmt.bg,
+                        color: fmt.color,
+                        backdropFilter: 'blur(4px)',
+                      }}
+                    >
+                      {fmt.label}
+                    </span>
+                  </div>
+                </motion.div>
+              );
+            });
+          })()}
         </div>
       </div>
 

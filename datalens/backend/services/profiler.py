@@ -79,9 +79,9 @@ def _column_profile(df: pd.DataFrame, col: str, datetime_cols: list[str]) -> dic
     # Raw dtype string
     dtype_str = str(series.dtype)
 
-    # Sample values (first 5 non-null)
+    # Sample values (first 10 non-null)
     sample_values = [
-        _safe_val(v) for v in series.dropna().head(5).tolist()
+        _safe_val(v) for v in series.dropna().head(10).tolist()
     ]
 
     profile: dict[str, Any] = {
@@ -99,6 +99,13 @@ def _column_profile(df: pd.DataFrame, col: str, datetime_cols: list[str]) -> dic
         "median": None,
         "q25": None,
         "q75": None,
+        "p05": None,
+        "p95": None,
+        "p99": None,
+        "skewness": None,
+        "kurtosis": None,
+        "outlier_count": None,
+        "distribution_shape": None,
         "top_values": [],
     }
 
@@ -112,6 +119,35 @@ def _column_profile(df: pd.DataFrame, col: str, datetime_cols: list[str]) -> dic
             profile["median"] = _safe_val(numeric_series.median())
             profile["q25"] = _safe_val(float(numeric_series.quantile(0.25)))
             profile["q75"] = _safe_val(float(numeric_series.quantile(0.75)))
+
+            # Tail percentiles
+            pcts = numeric_series.quantile([0.05, 0.95, 0.99])
+            profile["p05"] = _safe_val(round(float(pcts[0.05]), 6))
+            profile["p95"] = _safe_val(round(float(pcts[0.95]), 6))
+            profile["p99"] = _safe_val(round(float(pcts[0.99]), 6))
+
+            # Skewness, kurtosis, distribution shape
+            skew = round(float(numeric_series.skew()), 4)
+            kurt = round(float(numeric_series.kurtosis()), 4)
+            profile["skewness"] = _safe_val(skew)
+            profile["kurtosis"] = _safe_val(kurt)
+            if skew > 1:
+                shape = "right-skewed"
+            elif skew < -1:
+                shape = "left-skewed"
+            elif kurt > 3:
+                shape = "heavy-tailed"
+            else:
+                shape = "normal"
+            profile["distribution_shape"] = shape
+
+            # Outlier count: values > mean ± 3σ
+            mean_val = float(numeric_series.mean())
+            std_val = float(numeric_series.std())
+            if std_val > 0:
+                profile["outlier_count"] = int(((numeric_series < mean_val - 3 * std_val) | (numeric_series > mean_val + 3 * std_val)).sum())
+            else:
+                profile["outlier_count"] = 0
     elif col in datetime_cols:
         try:
             parsed = pd.to_datetime(series, errors="coerce")
@@ -124,7 +160,7 @@ def _column_profile(df: pd.DataFrame, col: str, datetime_cols: list[str]) -> dic
     else:
         # Categorical / object: compute top value frequencies
         try:
-            vc = series.value_counts(dropna=True).head(10)
+            vc = series.value_counts(dropna=True).head(20)
             profile["top_values"] = [
                 {"value": _safe_val(k), "count": int(v)}
                 for k, v in vc.items()
@@ -166,7 +202,7 @@ def _compute_correlations(df: pd.DataFrame, numeric_cols: list[str]) -> list[dic
                 )
 
         pairs.sort(key=lambda x: x["abs_correlation"], reverse=True)
-        return pairs[:10]
+        return pairs[:15]
     except Exception as exc:
         logger.warning("Correlation computation failed: %s", exc)
         return []

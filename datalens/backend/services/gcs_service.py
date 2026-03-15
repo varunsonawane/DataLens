@@ -229,7 +229,7 @@ async def _local_upload_image(image_data: bytes, image_id: str) -> str:
 # ---------------------------------------------------------------------------
 
 
-async def save_session(session_id: str, session: dict) -> bool:
+async def save_session(session_id: str, session: dict, owner_id: Optional[str] = None) -> bool:
     """
     Persist a full session dict to GCS as JSON and upsert its metadata to
     Firestore (or local fallback).
@@ -259,9 +259,11 @@ async def save_session(session_id: str, session: dict) -> bool:
     bool
         True on success, False if a non-recoverable error occurred.
     """
-    # Ensure session_id is stamped into the dict
+    # Ensure session_id and owner_id are stamped into the dict
     session = dict(session)
     session.setdefault("session_id", session_id)
+    if owner_id is not None:
+        session["owner_id"] = owner_id
 
     if _detect_local_dev():
         return await _local_save_session(session_id, session)
@@ -290,6 +292,7 @@ async def save_session(session_id: str, session: dict) -> bool:
                 "preview_text": eli5_text[:100],
                 "image_count": len(images),
                 "thumbnail_url": thumbnail_url,
+                "owner_id": session.get("owner_id"),
             }
 
             fs_client = get_firestore_client()
@@ -332,6 +335,7 @@ async def _local_save_session(session_id: str, session: dict) -> bool:
                 "preview_text": eli5_text[:100],
                 "image_count": len(images),
                 "thumbnail_url": thumbnail_url,
+                "owner_id": session.get("owner_id"),
             }
             _save_local_firestore_index(index)
 
@@ -405,7 +409,7 @@ async def _local_load_session(session_id: str) -> Optional[dict]:
 # ---------------------------------------------------------------------------
 
 
-async def list_sessions() -> List[dict]:
+async def list_sessions(owner_id: Optional[str] = None) -> List[dict]:
     """
     Return all session metadata documents, ordered by created_at descending.
 
@@ -419,15 +423,18 @@ async def list_sessions() -> List[dict]:
         { session_id, filename, created_at, preview_text, image_count, thumbnail_url }
     """
     if _detect_local_dev():
-        return await _local_list_sessions()
+        return await _local_list_sessions(owner_id)
 
     loop = asyncio.get_event_loop()
 
     def _sync_list() -> List[dict]:
         try:
+            if owner_id is None:
+                return []
             fs_client = get_firestore_client()
             docs = (
                 fs_client.collection(FIRESTORE_COLLECTION)
+                .where("owner_id", "==", owner_id)
                 .order_by("created_at", direction="DESCENDING")
                 .stream()
             )
@@ -443,12 +450,15 @@ async def list_sessions() -> List[dict]:
         return []
 
 
-async def _local_list_sessions() -> List[dict]:
+async def _local_list_sessions(owner_id: Optional[str] = None) -> List[dict]:
     """List sessions from the local JSON index, sorted by created_at desc."""
     loop = asyncio.get_event_loop()
     try:
         index = await loop.run_in_executor(None, _load_local_firestore_index)
         items = list(index.values())
+        if owner_id is None:
+            return []
+        items = [s for s in items if s.get("owner_id") == owner_id]
         items.sort(key=lambda x: x.get("created_at", ""), reverse=True)
         return items
     except Exception as exc:
@@ -554,10 +564,17 @@ async def append_conversation_message(session_id: str, message: dict) -> bool:
     """
     session = await load_session(session_id)
     if session is None:
-        logger.error(
-            "append_conversation_message: session %s not found.", session_id
-        )
-        return False
+        logger.info("Session %s not found, auto-creating a new chat session.", session_id)
+        session = {
+            "session_id": session_id,
+            "filename": "New Chat",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "data_profile": {},
+            "stories": {"eli5": "A blank session for general queries.", "architecture": "", "analyst": "", "chart_data": {}},
+            "images": [],
+            "conversation_history": [],
+            "rag_index_ids": {"dataset": "", "stories": "", "external": ""},
+        }
 
     history = session.get("conversation_history") or []
     # Ensure timestamp is present

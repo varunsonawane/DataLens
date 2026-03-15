@@ -16,8 +16,11 @@ from __future__ import annotations
 import logging
 from typing import List, Optional
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, Header, HTTPException, status
 from pydantic import BaseModel, Field
+from typing import Optional as _Opt
+
+from dependencies.auth import get_owner_id
 
 from services.gcs_service import (
     append_conversation_message,
@@ -26,6 +29,8 @@ from services.gcs_service import (
     load_session,
     save_session,
     update_session_images,
+    _load_local_firestore_index,
+    _save_local_firestore_index,
 )
 
 logger = logging.getLogger(__name__)
@@ -99,10 +104,10 @@ class OperationResult(BaseModel):
         "in local-dev mode)."
     ),
 )
-async def list_all_sessions() -> List[SessionListItem]:
-    """List all sessions from Firestore, ordered by created_at descending."""
+async def list_all_sessions(owner_id: _Opt[str] = Depends(get_owner_id)) -> List[SessionListItem]:
+    """List sessions for the current owner, ordered by created_at descending."""
     try:
-        raw_sessions = await list_sessions()
+        raw_sessions = await list_sessions(owner_id=owner_id)
         return [
             SessionListItem(
                 session_id=s.get("session_id", ""),
@@ -290,3 +295,63 @@ async def patch_images(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update session images: {exc}",
         )
+
+
+@router.post(
+    "/claim-unclaimed",
+    response_model=OperationResult,
+    summary="Claim all unclaimed sessions for current user",
+    description=(
+        "Assigns all sessions with no owner_id to the currently authenticated user. "
+        "Used to migrate legacy sessions created before auth was added."
+    ),
+)
+async def claim_unclaimed_sessions(owner_id: _Opt[str] = Depends(get_owner_id)) -> OperationResult:
+    """Migrate all ownerless sessions to the current user."""
+    if not owner_id:
+        raise HTTPException(status_code=401, detail="Authentication required.")
+
+    import os
+    is_local = os.environ.get("GCS_LOCAL_DEV", "").lower() in ("1", "true", "yes")
+
+    try:
+        if is_local:
+            index = _load_local_firestore_index()
+            count = 0
+            for sid, s in index.items():
+                if s.get("owner_id") is None:
+                    s["owner_id"] = owner_id
+                    count += 1
+                    # Also update the full session JSON
+                    session = await load_session(sid)
+                    if session:
+                        session["owner_id"] = owner_id
+                        await save_session(sid, session, owner_id=owner_id)
+            _save_local_firestore_index(index)
+            # Link sessions to user account if authenticated (not guest)
+            if not owner_id.startswith("guest_"):
+                try:
+                    from services.user_service import add_session_to_user
+                    for sid in list(index.keys()):
+                        if index[sid].get("owner_id") == owner_id:
+                            await add_session_to_user(owner_id, sid)
+                except Exception as exc:
+                    logger.warning("Could not link sessions to user: %s", exc)
+            return OperationResult(success=True, message=f"Claimed {count} session(s).")
+        else:
+            # Cloud Firestore: query all sessions with no owner_id
+            from services.gcs_service import get_firestore_client, FIRESTORE_COLLECTION
+            fs = get_firestore_client()
+            docs = list(fs.collection(FIRESTORE_COLLECTION).where("owner_id", "==", None).stream())
+            count = 0
+            for doc in docs:
+                doc.reference.update({"owner_id": owner_id})
+                count += 1
+                session = await load_session(doc.id)
+                if session:
+                    session["owner_id"] = owner_id
+                    await save_session(doc.id, session, owner_id=owner_id)
+            return OperationResult(success=True, message=f"Claimed {count} session(s).")
+    except Exception as exc:
+        logger.error("claim_unclaimed_sessions error: %s", exc)
+        raise HTTPException(status_code=500, detail=str(exc))

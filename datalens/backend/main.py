@@ -68,6 +68,8 @@ logger = logging.getLogger(__name__)
 from routers.upload import router as upload_router
 from routers.stories import router as stories_router
 from routers.images import router as images_router
+from routers.auth import router as auth_router
+from routers.users import router as users_router
 
 # These routers are built by other agents but we register their prefixes now.
 # If the modules don't exist yet, we register empty placeholder routers so
@@ -194,6 +196,8 @@ def create_app() -> FastAPI:
     # ------------------------------------------------------------------
     # Routers
     # ------------------------------------------------------------------
+    app.include_router(auth_router, prefix="/auth", tags=["Auth"])
+    app.include_router(users_router, prefix="/users", tags=["Users"])
     app.include_router(upload_router, prefix="/upload", tags=["Upload"])
     app.include_router(stories_router, prefix="/stories", tags=["Stories"])
     app.include_router(images_router, prefix="/images", tags=["Images"])

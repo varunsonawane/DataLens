@@ -19,6 +19,12 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import type { DataProfile, DbTableSummary, UploadResponse } from '../../types';
+import { getAuthHeader } from '../../store/authStore';
+
+function uploadHeaders(extra?: Record<string, string>): Record<string, string> {
+  const auth = getAuthHeader();
+  return { ...(auth ? { Authorization: auth } : {}), ...extra };
+}
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080';
 
@@ -274,7 +280,7 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
         const { data } = await axios.post<UploadResponse>(
           `${BACKEND_URL}/upload/file`,
           form,
-          { headers: { 'Content-Type': 'multipart/form-data' } },
+          { headers: uploadHeaders({ 'Content-Type': 'multipart/form-data' }) },
         );
         handleSuccess(data);
       } catch (err: unknown) {
@@ -294,6 +300,7 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
         // Backend: GET /upload/sample/{dataset_name}
         const { data } = await axios.get<UploadResponse>(
           `${BACKEND_URL}/upload/sample/${id}`,
+          { headers: uploadHeaders() },
         );
         handleSuccess(data);
       } catch (err: unknown) {
@@ -325,6 +332,7 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
         const { data } = await axios.post<UploadResponse>(
           `${BACKEND_URL}/upload/database`,
           payload,
+          { headers: uploadHeaders() },
         );
         handleSuccess(data);
       } catch (err: unknown) {

@@ -19,16 +19,47 @@ export function AgentPanel({ variant = 'sidebar' }: AgentPanelProps) {
   const [isResponding, setIsResponding] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const [showHistoryPanel, setShowHistoryPanel] = useState(true);
+  const [sidebarWidth, setSidebarWidth] = useState(300);
+  const isResizing = useRef(false);
 
-  const { sessionId, voiceOrbState, addConversationMessage, conversationHistory, setDashboardMode } =
+  const startResizing = useCallback((e: React.MouseEvent) => {
+    isResizing.current = true;
+    document.body.style.cursor = 'col-resize';
+  }, []);
+
+  const stopResizing = useCallback(() => {
+    if (isResizing.current) {
+      isResizing.current = false;
+      document.body.style.cursor = 'default';
+    }
+  }, []);
+
+  const resize = useCallback((e: MouseEvent) => {
+    if (isResizing.current) {
+      const newWidth = window.innerWidth - e.clientX;
+      if (newWidth > 250 && newWidth < 800) {
+        setSidebarWidth(newWidth);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('mousemove', resize);
+    window.addEventListener('mouseup', stopResizing);
+    return () => {
+      window.removeEventListener('mousemove', resize);
+      window.removeEventListener('mouseup', stopResizing);
+    };
+  }, [resize, stopResizing]);
+
+  const { sessionId, voiceOrbState, addConversationMessage, conversationHistory, setDashboardMode, dashboardMode, clearChat } =
     useSessionStore();
   const { loadSession } = useSessions();
 
   const {
     connect, disconnect,
     sendText,
-    toggleMic,
-    isConnected, isListening, isMicEnabled, isSpeaking,
+    isConnected, isListening, isSpeaking,
     interimTranscript,
   } = useVoiceAgent();
 
@@ -148,24 +179,30 @@ export function AgentPanel({ variant = 'sidebar' }: AgentPanelProps) {
     : '#10b981'
     : 'rgba(255,255,255,0.25)';
 
-  // Show history panel only on the global agent page
-  const isGlobalAgent = sessionId === 'global_agent';
+  // (isGlobalAgent logic removed because we now rely on dashboardMode)
 
   return (
     <div
       className={clsx(
-        "flex h-full bg-white dark:bg-[#0f172a]",
-        variant === 'sidebar' ? "w-[300px] flex-shrink-0 border-l border-slate-200 dark:border-white/5" : "flex-1 w-full border-none",
+        "flex h-full bg-white dark:bg-[#0f172a] relative",
+        variant === 'sidebar' ? "flex-shrink-0 border-l border-slate-200 dark:border-white/5" : "flex-1 w-full border-none",
       )}
+      style={variant === 'sidebar' ? { width: sidebarWidth } : {}}
     >
+      {variant === 'sidebar' && (
+        <div
+          className="absolute left-0 top-0 bottom-0 w-1.5 -ml-[3px] cursor-col-resize hover:bg-emerald-500/50 z-50 transition-colors"
+          onMouseDown={startResizing}
+        />
+      )}
       {/* ── Main chat column */}
       <div
         className={clsx(
           "flex flex-col flex-1 min-w-0 relative transition-colors duration-300",
           isDragOver ? "bg-emerald-50 dark:bg-emerald-900/10" : "",
-          variant === 'center' ? "rounded-t-2xl shadow-xl border border-slate-200 dark:border-white/5" : "",
+          variant === 'center' ? "rounded-t-md border-t border-x border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#0f172a]" : "",
         )}
-        style={variant === 'center' ? { maxWidth: '1000px', margin: '0 auto', borderTopLeftRadius: '24px', borderTopRightRadius: '24px' } : {}}
+        style={variant === 'center' ? { borderTopLeftRadius: '16px', borderTopRightRadius: '16px' } : {}}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
@@ -199,27 +236,38 @@ export function AgentPanel({ variant = 'sidebar' }: AgentPanelProps) {
             </div>
           </div>
 
-          {/* Status */}
-          <div className="flex items-center gap-1.5">
-            <motion.div
-              animate={{ opacity: isConnected ? 1 : [1, 0.3, 1] }}
-              transition={isConnected ? {} : { duration: 1.8, repeat: Infinity }}
-              className="w-1.5 h-1.5 rounded-full"
-              style={{ background: statusColor }}
-            />
-            {isConnected ? <Wifi size={11} style={{ color: statusColor }} /> : <WifiOff size={11} style={{ color: 'rgba(148,163,184,0.4)' }} />}
-            <span className="text-[10px] font-medium text-slate-400">{connectionLabel}</span>
-            <AnimatePresence>
-              {isConnected && isListening && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
-                  className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span className="text-[9px] font-bold uppercase tracking-wide text-emerald-400">Live</span>
-                </motion.div>
-              )}
-            </AnimatePresence>
+          {/* Status and Actions */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <motion.div
+                animate={{ opacity: isConnected ? 1 : [1, 0.3, 1] }}
+                transition={isConnected ? {} : { duration: 1.8, repeat: Infinity }}
+                className="w-1.5 h-1.5 rounded-full"
+                style={{ background: statusColor }}
+              />
+              {isConnected ? <Wifi size={11} style={{ color: statusColor }} /> : <WifiOff size={11} style={{ color: 'rgba(148,163,184,0.4)' }} />}
+              <span className="text-[10px] font-medium text-slate-400">{connectionLabel}</span>
+              <AnimatePresence>
+                {isConnected && isListening && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
+                    className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-[9px] font-bold uppercase tracking-wide text-emerald-400">Live</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+            
+            {dashboardMode === 'ai' && (
+              <button
+                onClick={clearChat}
+                className="px-2.5 py-1 rounded-lg text-[10px] font-semibold flex items-center gap-1.5 transition-colors bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300"
+              >
+                <Sparkles size={10} /> New Chat
+              </button>
+            )}
           </div>
         </div>
 
@@ -239,36 +287,6 @@ export function AgentPanel({ variant = 'sidebar' }: AgentPanelProps) {
 
         {/* ── Input area */}
         <div className="flex-shrink-0 border-t border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900/60">
-          {/* Quick actions */}
-          <div className="px-3 pt-2.5 flex gap-2">
-            <button
-              onClick={handleGenerateImage}
-              disabled={!isConnected || !sessionId}
-              className={clsx(
-                'flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-medium transition-all border',
-                isConnected && sessionId
-                  ? 'border-emerald-500/30 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 cursor-pointer'
-                  : 'border-slate-200 dark:border-slate-700 text-slate-400 cursor-not-allowed'
-              )}
-            >
-              <Sparkles size={10} /> Generate Chart <ImagePlus size={10} />
-            </button>
-            <button
-              onClick={toggleMic}
-              disabled={!sessionId}
-              className={clsx(
-                'px-3 py-1.5 rounded-xl text-[11px] font-medium transition-all border flex items-center gap-1',
-                isMicEnabled
-                  ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'
-                  : 'bg-slate-50 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700',
-                !sessionId && 'opacity-40 cursor-not-allowed'
-              )}
-            >
-              {isMicEnabled ? <Mic size={10} /> : <MicOff size={10} />}
-              {isMicEnabled ? 'Mic on' : 'Mic off'}
-            </button>
-          </div>
-
           {/* Chat input */}
           <div className="p-3">
             <form
@@ -309,8 +327,8 @@ export function AgentPanel({ variant = 'sidebar' }: AgentPanelProps) {
         </div>
       </div>
 
-      {/* ── Chat History Panel (right side, only for global agent) ──── */}
-      {isGlobalAgent && showHistoryPanel && (
+      {/* ── Chat History Panel (right side, only for AI assistant tab) ──── */}
+      {dashboardMode === 'ai' && showHistoryPanel && (
         <ChatHistoryPanel
           onDragSession={(sessionId, filename) => {
             // Visual feedback handled inside the panel

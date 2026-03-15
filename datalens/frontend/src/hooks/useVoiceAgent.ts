@@ -145,7 +145,7 @@ export function useVoiceAgent(): UseVoiceAgentReturn {
           // Streaming complete — emit as a single message bubble
           const buffered = streamBufferRef.current.trim();
           streamBufferRef.current = '';
-          if (buffered) {
+          if (buffered.length > 0) {
             const message: ConversationMessage = {
               id: crypto.randomUUID(),
               role: 'agent',

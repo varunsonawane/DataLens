@@ -20,7 +20,8 @@ from datetime import datetime, timezone
 from typing import Annotated, Optional, Any
 
 import pandas as pd
-from fastapi import APIRouter, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Header, HTTPException, UploadFile, status
+from dependencies.auth import get_owner_id
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
@@ -186,7 +187,7 @@ def _sanitize_nans(obj: Any) -> Any:
         return [_sanitize_nans(item) for item in obj]
     return obj
 
-async def _build_upload_response(df: pd.DataFrame, filename: str) -> dict:
+async def _build_upload_response(df: pd.DataFrame, filename: str, owner_id: Optional[str] = None) -> dict:
     """Profile a DataFrame and create a new session. Returns the response dict."""
     session_id = str(uuid.uuid4())
     created_at = datetime.now(timezone.utc).isoformat()
@@ -206,7 +207,14 @@ async def _build_upload_response(df: pd.DataFrame, filename: str) -> dict:
     }
 
     try:
-        await save_session(session_id, session_doc)
+        await save_session(session_id, session_doc, owner_id=owner_id)
+        # Link session to user account if authenticated
+        if owner_id and not owner_id.startswith("guest_"):
+            try:
+                from services.user_service import add_session_to_user
+                await add_session_to_user(owner_id, session_id)
+            except Exception as exc:
+                logger.warning("Could not link session to user %s: %s", owner_id, exc)
     except Exception as exc:
         logger.error("Failed to save session %s to GCS/Firestore: %s", session_id, exc)
         # Continue — frontend can still use the in-memory response
@@ -228,6 +236,7 @@ async def _build_upload_response(df: pd.DataFrame, filename: str) -> dict:
 @router.post("/file", response_model=UploadResponse, status_code=status.HTTP_201_CREATED)
 async def upload_file(
     file: Annotated[UploadFile, File(description="CSV or Excel file (max 100 MB)")],
+    owner_id: Optional[str] = Depends(get_owner_id),
 ):
     """
     Accept a CSV or Excel file upload, profile it with Pandas, create a session.
@@ -291,12 +300,12 @@ async def upload_file(
             detail="The uploaded file contains no data rows.",
         )
 
-    result = await _build_upload_response(df, filename)
+    result = await _build_upload_response(df, filename, owner_id=owner_id)
     return JSONResponse(content=result, status_code=status.HTTP_201_CREATED)
 
 
 @router.post("/database", response_model=UploadResponse, status_code=status.HTTP_201_CREATED)
-async def upload_database(body: DatabaseUploadRequest):
+async def upload_database(body: DatabaseUploadRequest, owner_id: Optional[str] = Depends(get_owner_id)):
     """
     Connect to a SQL database via SQLAlchemy and extract full schema metadata.
 
@@ -367,7 +376,13 @@ async def upload_database(body: DatabaseUploadRequest):
     asyncio.create_task(_index_schema())
 
     try:
-        await save_session(session_id, session_doc)
+        await save_session(session_id, session_doc, owner_id=owner_id)
+        if owner_id and not owner_id.startswith("guest_"):
+            try:
+                from services.user_service import add_session_to_user
+                await add_session_to_user(owner_id, session_id)
+            except Exception as exc:
+                logger.warning("Could not link DB session to user %s: %s", owner_id, exc)
     except Exception as exc:
         logger.error("Failed to save DB session %s: %s", session_id, exc)
 
@@ -384,7 +399,7 @@ async def upload_database(body: DatabaseUploadRequest):
 
 
 @router.get("/sample/{dataset_name}", response_model=UploadResponse)
-async def load_sample_dataset(dataset_name: str):
+async def load_sample_dataset(dataset_name: str, owner_id: Optional[str] = Depends(get_owner_id)):
     """
     Load one of the built-in sample datasets for demo / testing.
 
@@ -407,5 +422,5 @@ async def load_sample_dataset(dataset_name: str):
             detail=f"Failed to load sample dataset '{dataset_name}': {exc}",
         )
 
-    result = await _build_upload_response(df, filename)
+    result = await _build_upload_response(df, filename, owner_id=owner_id)
     return JSONResponse(content=result)

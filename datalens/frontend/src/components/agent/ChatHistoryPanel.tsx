@@ -3,6 +3,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Clock, MessageSquare, ChevronDown, ChevronRight, GripVertical, RefreshCw, X } from 'lucide-react';
 import axios from 'axios';
 import type { ConversationMessage, SessionListItem } from '../../types';
+import { getAuthHeader, useAuthStore } from '../../store/authStore';
+
+function authHeaders(): Record<string, string> {
+  const h = getAuthHeader();
+  return h ? { Authorization: h } : {};
+}
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080';
 
@@ -42,7 +48,8 @@ function SessionCard({
     setLoading(true);
     try {
       const resp = await axios.get<{ conversation_history: ConversationMessage[] }>(
-        `${BACKEND_URL}/sessions/${session.session_id}`
+        `${BACKEND_URL}/sessions/${session.session_id}`,
+        { headers: authHeaders() }
       );
       setMessages(resp.data.conversation_history || []);
     } catch {
@@ -137,11 +144,14 @@ export function ChatHistoryPanel({ onDragSession, className }: ChatHistoryPanelP
   const [sessions, setSessions] = useState<SessionListItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeDrag, setActiveDrag] = useState<string | null>(null);
+  const authKey = useAuthStore((s) => s.appToken ?? s.guestId ?? 'none');
 
   const loadSessions = useCallback(async () => {
     setLoading(true);
     try {
-      const resp = await axios.get<SessionListItem[]>(`${BACKEND_URL}/sessions`);
+      const resp = await axios.get<SessionListItem[]>(`${BACKEND_URL}/sessions`, {
+        headers: authHeaders(),
+      });
       setSessions(resp.data || []);
     } catch {
       setSessions([]);
@@ -150,7 +160,7 @@ export function ChatHistoryPanel({ onDragSession, className }: ChatHistoryPanelP
     }
   }, []);
 
-  useEffect(() => { loadSessions(); }, [loadSessions]);
+  useEffect(() => { loadSessions(); }, [loadSessions, authKey]);
 
   return (
     <div className={`flex flex-col h-full bg-slate-50 dark:bg-slate-900/50 border-l border-slate-200 dark:border-slate-700/50 ${className}`}

@@ -94,7 +94,8 @@ annotated-types==0.7.0
 
 # --- Security / Auth ---
 cryptography==46.0.5
-Authlib==1.6.8
+passlib[bcrypt]==1.7.4
+bcrypt==4.3.0
 PyJWT==2.11.0
 pyOpenSSL==25.3.0
 
@@ -120,14 +121,21 @@ watchdog==6.0.0
 # ============================================================
 #
 # Runtime dependencies (package.json > dependencies):
+#   @radix-ui/react-avatar@^1.1.11
+#   @radix-ui/react-slot@^1.2.4
+#   @react-oauth/google@^0.13.4
+#   @types/three@^0.183.1
+#   axios@^1.7.7
+#   class-variance-authority@^0.7.1
+#   clsx@^2.1.1
+#   framer-motion@^11.3.28
+#   lucide-react@^0.441.0
 #   react@^18.3.1
 #   react-dom@^18.3.1
-#   framer-motion@^11.3.28
 #   recharts@^2.12.7
+#   tailwind-merge@^3.5.0
+#   three@^0.183.2
 #   zustand@^4.5.4
-#   lucide-react@^0.441.0
-#   clsx@^2.1.1
-#   axios@^1.7.7
 #
 # Dev dependencies (package.json > devDependencies):
 #   @types/react@^18.3.5

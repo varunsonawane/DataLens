@@ -66,6 +66,7 @@ interface SessionState {
   finalizeStories: (stories: Stories) => void;
   setDashboardMode: (mode: 'upload' | 'session' | 'directory' | 'ai') => void;
   setGlobalSearchQuery: (query: string) => void;
+  clearChat: () => void;
 }
 
 export const useSessionStore = create<SessionState>((set, get) => ({
@@ -136,9 +137,19 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   setVoiceOrbState: (voiceOrbState) => set({ voiceOrbState }),
 
   addConversationMessage: (message) =>
-    set((state) => ({
-      conversationHistory: [...state.conversationHistory, message],
-    })),
+    set((state) => {
+      const last = state.conversationHistory[state.conversationHistory.length - 1];
+      // Drop exact duplicate if same role+content arrives within 500ms (React StrictMode double-mount guard)
+      if (
+        last &&
+        last.role === message.role &&
+        last.content === message.content &&
+        Math.abs(new Date(message.timestamp).getTime() - new Date(last.timestamp).getTime()) < 500
+      ) {
+        return state;
+      }
+      return { conversationHistory: [...state.conversationHistory, message] };
+    }),
 
   setDataProfile: (profile) => set({ dataProfile: profile }),
 
@@ -211,4 +222,15 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   setDashboardMode: (mode) => set({ dashboardMode: mode }),
 
   setGlobalSearchQuery: (query) => set({ globalSearchQuery: query }),
+
+  clearChat: () => set({
+    currentSession: null,
+    sessionId: crypto.randomUUID(),
+    dataProfile: null,
+    conversationHistory: [],
+    pendingImages: new Map(),
+    resolvedImages: [],
+    chartData: null,
+    // Note: streamProgress is kept as is because it's tied to dataset viewing usually
+  }),
 }));

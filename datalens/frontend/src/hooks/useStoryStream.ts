@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { useSessionStore } from '../store/sessionStore';
+import { getAuthHeader } from '../store/authStore';
 import type { StreamChunk, DataProfile, StoryFormat } from '../types';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080';
@@ -102,11 +103,13 @@ export function useStoryStream(): UseStoryStreamReturn {
       abortControllerRef.current = controller;
 
       try {
+        const authHeader = getAuthHeader();
         const response = await fetch(`${BACKEND_URL}/stories/generate`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Accept: 'text/event-stream',
+            ...(authHeader ? { Authorization: authHeader } : {}),
           },
           body: JSON.stringify({ session_id: sessionId, data_profile: dataProfile }),
           signal: controller.signal,

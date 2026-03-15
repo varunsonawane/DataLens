@@ -444,12 +444,15 @@ The current session ID is: {self.session_id}
                 new_message=user_content,
                 run_config=run_config,
             ):
-                # ADK events: check for text responses and tool results
                 if hasattr(event, "content") and event.content:
                     content = event.content
                     if hasattr(content, "parts"):
                         for part in content.parts:
                             if hasattr(part, "text") and part.text:
+                                # Ignore final fully compiled event to prevent duplicating text
+                                is_final_func = getattr(event, "is_final_response", None)
+                                if is_final_func and callable(is_final_func) and is_final_func():
+                                    continue
                                 full_response_text += part.text
                                 yield {"type": "text_response", "content": part.text}
                             elif hasattr(part, "function_response") and part.function_response:
@@ -481,6 +484,12 @@ The current session ID is: {self.session_id}
             logger.error(
                 "_process_with_adk error (session=%s): %s", self.session_id, exc
             )
+            
+            # If we already streamed text or images, do not fall back as it will duplicate the response!
+            if full_response_text or new_images:
+                yield {"type": "error", "message": f"Agent stream finished with an error: {exc}"}
+                return
+
             # Fall back to direct GenAI call
             async for chunk in self._process_with_genai_direct(text):
                 yield chunk

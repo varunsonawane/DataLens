@@ -66,8 +66,12 @@ Write for a curious, excited 10-year-old discovering something amazing for the f
 - Exclamation points! Rhetorical questions? Short punchy sentences.
 - Emoji-friendly language (but no actual emojis in output)
 - Fun character voices ("Imagine you're a detective...")
-- Surprising "wow" facts pulled from the actual data
+- Surprising "wow" facts pulled from the actual data (use REAL numbers from Key Signals above)
 - 4-6 paragraphs, conversational and energetic
+
+CHARACTER SEED (MANDATORY): On the very first line of your response — before any story text — output:
+CHARACTER: [name], [age], [2 distinctive visual details e.g. "red backpack, round glasses"]
+Then use this EXACT character consistently in ALL IMAGE_PROMPTs.
 
 ## IMAGE_PROMPT Tags
 When you want an image, you MUST output BOTH tags together in this exact order:
@@ -81,9 +85,9 @@ MANDATORY RULES for ELI5 images: Generate 2-3 images. EVERY image MUST be a NARR
 
 STRICT RULES:
 1. GROUND IN ACTUAL DATA VALUES. Never generate a generic image. If sales dropped 40% in March, the scene must show that drop.
-2. ONE CONSISTENT CHARACTER across ALL images in this session. Establish the character in the first image (e.g. "Zara, a curious 6-year-old girl with a red backpack and pigtails") and reuse the EXACT SAME character in every subsequent image.
+2. ONE CONSISTENT CHARACTER across ALL images: use the CHARACTER you seeded above. Name them in EVERY image prompt.
 3. SHOW COMPARISON OR CHANGE, never just a static snapshot.
-4. ANCHOR EVERY KEY METRIC TO A REAL OBJECT.
+4. ANCHOR EVERY KEY METRIC TO A REAL OBJECT (e.g. "a tower of 6,786 blocks labelled POP vs 5,810 blocks labelled HIP-HOP").
 5. READABLE AT A GLANCE. A 5-year-old must be able to point at the image and describe what is happening with no text.
 6. EMBED A SHORT CAPTION at the bottom of the image, written as a child would say it, referencing actual data values.
 7. STYLE: Warm flat illustration. Bright primary colors. Simple shapes. Children's storybook meets Pixar concept art. No photo-realism.
@@ -137,7 +141,16 @@ IMAGE_PROMPT rules for ANALYST: Generate EXACTLY 2 images. Each must be:
 PROFESSIONAL DATA VISUALIZATION ONLY. Must look like a real business intelligence dashboard (Tableau, Power BI, Looker).
 Use: Dark background (#0f172a). Vibrant neon accent colors. Actual chart elements. Clean typography. Grid lines. Legend. No cartoon elements whatsoever.
 
-After the 2 IMAGE_PROMPT tags, output 3-5 chart JSON blocks with REAL data values from the dataset profile:
+After the 2 IMAGE_PROMPT tags, output EXACTLY 3 chart JSON blocks with REAL data values from the dataset profile.
+
+Chart type selection guide — pick the best fit for each finding:
+- Use "bar" for categorical comparisons (e.g. top genres by count, top countries by sales)
+- Use "line" for time series or ranked sequences showing trend
+- Use "pie" for part-of-whole breakdowns where there are 6 or fewer categories
+- Use "scatter" ONLY when showing correlation between 2 specific numeric columns
+
+MANDATORY: Use actual numbers from the ## Sample Values and ## Key Signals sections above. DO NOT invent placeholder data like [100, 200, 300]. If showing top_values, use ALL available values with their real counts.
+
 ```json
 {
   "chart_type": "bar",
@@ -154,18 +167,110 @@ After the 2 IMAGE_PROMPT tags, output 3-5 chart JSON blocks with REAL data value
 Supported chart_type values: bar, line, pie, scatter
 """
 
+def _corr_direction(r: float) -> str:
+    abs_r = abs(r)
+    sign = "positive" if r >= 0 else "negative"
+    if abs_r >= 0.7:
+        strength = "strong"
+    elif abs_r >= 0.4:
+        strength = "moderate"
+    else:
+        strength = "weak"
+    return f"{strength} {sign}"
+
+
+def _extract_key_signals(data_profile: dict[str, Any]) -> str:
+    """Build a pre-computed Key Signals block to anchor Gemini's narrative."""
+    col_profiles = data_profile.get("columns", [])
+    correlations = data_profile.get("correlations", [])
+    shape = data_profile.get("shape", {})
+    rows = shape.get("rows", 0)
+
+    lines: list[str] = []
+
+    # Strongest correlation
+    if correlations:
+        top = correlations[0]
+        r = top["correlation"]
+        lines.append(
+            f"- Strongest correlation: {top['col_a']} ↔ {top['col_b']} (r={r}) "
+            f"- {_corr_direction(r)} relationship"
+        )
+
+    # Most skewed numeric column
+    numeric_skew = [
+        cp for cp in col_profiles
+        if cp.get("skewness") is not None and abs(cp["skewness"]) > 0
+    ]
+    if numeric_skew:
+        most_skewed = max(numeric_skew, key=lambda c: abs(c["skewness"]))
+        lines.append(
+            f"- Most skewed column: {most_skewed['name']} "
+            f"(skew={most_skewed['skewness']}, {most_skewed.get('distribution_shape', 'unknown')}) "
+            f"- outliers may be inflating averages"
+        )
+
+    # Highest null rate
+    all_cols = [cp for cp in col_profiles if cp.get("null_pct", 0) > 0]
+    if all_cols:
+        worst_null = max(all_cols, key=lambda c: c["null_pct"])
+        lines.append(
+            f"- Highest null rate: {worst_null['name']} "
+            f"({worst_null['null_pct']}% missing) - consider this gap in analysis"
+        )
+
+    # Dominant category (categorical column with highest top-value share)
+    best_cat: dict[str, Any] | None = None
+    best_pct = 0.0
+    for cp in col_profiles:
+        top_vals = cp.get("top_values") or []
+        if top_vals and rows > 0:
+            pct = round(top_vals[0]["count"] / rows * 100, 1)
+            if pct > best_pct:
+                best_pct = pct
+                best_cat = {"col": cp["name"], "value": top_vals[0]["value"], "count": top_vals[0]["count"], "pct": pct}
+    if best_cat:
+        lines.append(
+            f"- Dominant category: \"{best_cat['value']}\" in {best_cat['col']} "
+            f"({best_cat['count']} of {rows} rows = {best_cat['pct']}%)"
+        )
+
+    # Date range (if datetime columns present)
+    dt_cols = [cp for cp in col_profiles if cp.get("is_datetime") and cp.get("min") and cp.get("max")]
+    if dt_cols:
+        dt = dt_cols[0]
+        lines.append(f"- Date range: {dt['min']} to {dt['max']} in column '{dt['name']}'")
+
+    # Outlier hotspot
+    outlier_cols = [cp for cp in col_profiles if (cp.get("outlier_count") or 0) > 0]
+    if outlier_cols:
+        worst = max(outlier_cols, key=lambda c: c.get("outlier_count", 0))
+        lines.append(
+            f"- Outlier hotspot: {worst['name']} has {worst['outlier_count']} outliers (>3σ from mean)"
+        )
+
+    if not lines:
+        return ""
+
+    return (
+        "### Key Signals (pre-computed - ground your story in these)\n"
+        + "\n".join(lines)
+        + "\n"
+    )
+
+
 def _build_user_prompt(data_profile: dict[str, Any], context_label: str) -> str:
     """Construct the user turn prompt from the data profile."""
     shape = data_profile.get("shape", {})
     rows = shape.get("rows", "unknown")
     columns_count = shape.get("columns", "unknown")
-    column_names = data_profile.get("column_names", [])
     numeric_cols = data_profile.get("numeric_columns", [])
     categorical_cols = data_profile.get("categorical_columns", [])
     datetime_cols = data_profile.get("datetime_columns", [])
     correlations = data_profile.get("correlations", [])
     summary = data_profile.get("summary_stats", {})
     col_profiles = data_profile.get("columns", [])
+    total_rows = shape.get("rows", 0)
 
     # Build concise column descriptions
     col_descriptions: list[str] = []
@@ -176,19 +281,38 @@ def _build_user_prompt(data_profile: dict[str, Any], context_label: str) -> str:
         unique = cp.get("unique_count", 0)
         parts = [f"  - {name} ({dtype}): {null_pct}% null, {unique} unique"]
         if cp.get("mean") is not None:
-            parts.append(f"mean={cp['mean']}, std={cp.get('std', '?')}")
+            skew_str = ""
+            if cp.get("skewness") is not None:
+                skew_str = f", skew={cp['skewness']} ({cp.get('distribution_shape', '')})"
+            outlier_str = ""
+            if cp.get("outlier_count") is not None:
+                outlier_str = f" | {cp['outlier_count']} outliers"
+            p_str = ""
+            if cp.get("p05") is not None:
+                p_str = f" | p05={cp['p05']}, p95={cp['p95']}"
+            parts.append(
+                f"mean={cp['mean']}, std={cp.get('std', '?')}{skew_str}{p_str}{outlier_str}"
+            )
         if cp.get("top_values"):
-            top = cp["top_values"][:3]
-            top_str = ", ".join(f"{t['value']}({t['count']})" for t in top)
-            parts.append(f"top: {top_str}")
+            top = cp["top_values"][:5]
+            top_str_parts = []
+            for t in top:
+                pct = round(t["count"] / total_rows * 100, 1) if total_rows else 0
+                top_str_parts.append(f"{t['value']}({pct}%)")
+            parts.append(f"top: {', '.join(top_str_parts)}")
         col_descriptions.append(" | ".join(parts))
 
-    # Top correlations summary
+    # Top 10 correlations with direction labels
     corr_lines: list[str] = []
-    for pair in correlations[:5]:
+    for pair in correlations[:10]:
+        r = pair["correlation"]
+        direction = _corr_direction(r)
         corr_lines.append(
-            f"  - {pair['col_a']} ↔ {pair['col_b']}: r={pair['correlation']}"
+            f"  - {pair['col_a']} ↔ {pair['col_b']}: r={r} ({direction})"
         )
+
+    # Pre-computed key signals block
+    key_signals = _extract_key_signals(data_profile)
 
     prompt_parts = [
         f"## Dataset Profile",
@@ -201,21 +325,30 @@ def _build_user_prompt(data_profile: dict[str, Any], context_label: str) -> str:
         f"**Duplicate rows:** {summary.get('duplicate_rows', 0)} ({summary.get('duplicate_row_pct', 0)}%)",
         f"**Memory:** {summary.get('memory_mb', 0)} MB",
         f"",
+    ]
+
+    if key_signals:
+        prompt_parts.append(key_signals)
+
+    prompt_parts += [
         f"### Column Details",
         "\n".join(col_descriptions) if col_descriptions else "  (none)",
         f"",
-        f"### Top correlations",
+        f"### Top Correlations",
         "\n".join(corr_lines) if corr_lines else "  (not enough numeric columns)",
         f"",
     ]
 
     # Include actual sample values for chart accuracy
     sample_lines: list[str] = []
-    for cp in col_profiles[:10]:
+    for cp in col_profiles[:15]:
         if cp.get("sample_values"):
-            sample_lines.append(f"  - {cp['name']}: samples = {cp['sample_values'][:5]}")
+            sample_lines.append(f"  - {cp['name']}: samples = {cp['sample_values'][:10]}")
         if cp.get("mean") is not None:
-            sample_lines.append(f"    stats: min={cp.get('min')}, max={cp.get('max')}, mean={round(float(cp.get('mean', 0)), 2)}, std={round(float(cp.get('std', 0)), 2)}")
+            sample_lines.append(
+                f"    stats: min={cp.get('min')}, max={cp.get('max')}, "
+                f"mean={round(float(cp.get('mean', 0)), 2)}, std={round(float(cp.get('std', 0)), 2)}"
+            )
 
     if sample_lines:
         prompt_parts.extend([
@@ -225,7 +358,8 @@ def _build_user_prompt(data_profile: dict[str, Any], context_label: str) -> str:
         ])
 
     prompt_parts.append(
-        f"Now generate the {context_label.upper()} story for this dataset. Remember, do not include section headers (like === ELI5 ===). Just write the story directly.",
+        f"Now generate the {context_label.upper()} story for this dataset. "
+        f"Remember, do not include section headers (like === ELI5 ===). Just write the story directly.",
     )
 
     return "\n".join(prompt_parts)
@@ -237,7 +371,8 @@ async def _generate_single_story_stream(
     format_name: str,
     session_id: str,
     event_queue: asyncio.Queue,
-    state_tracker: dict[str, Any]
+    state_tracker: dict[str, Any],
+    data_context: str = "",
 ):
     """
     Generate a single story (e.g. eli5) from Gemini and push chunks to a shared event queue.
@@ -273,7 +408,7 @@ async def _generate_single_story_stream(
         placeholder_id = str(uuid.uuid4())
         async def _img_task():
             try:
-                url = await generate_image_nano_banana(prompt, session_id)
+                url = await generate_image_nano_banana(prompt, session_id, story_format=format_name, data_context=data_context)
                 await event_queue.put({
                     "type": "image_ready",
                     "url": url,
@@ -480,19 +615,46 @@ async def generate_stories_stream(
         "image_tasks": []
     }
 
+    # Build compact data_context for image prompt grounding
+    def _build_data_context(profile: dict[str, Any]) -> str:
+        parts: list[str] = []
+        shape = profile.get("shape", {})
+        rows = shape.get("rows", 0)
+        if rows:
+            parts.append(f"{rows} rows")
+        cols = profile.get("columns", [])
+        # Top dominant category
+        best_pct = 0.0
+        for cp in cols:
+            top_vals = cp.get("top_values") or []
+            if top_vals and rows > 0:
+                pct = round(top_vals[0]["count"] / rows * 100, 1)
+                if pct > best_pct:
+                    best_pct = pct
+                    parts_cat = f"top {cp['name']}: {top_vals[0]['value']} ({pct}%)"
+        if best_pct > 0:
+            parts.append(parts_cat)  # type: ignore[possibly-undefined]
+        # Top 2 correlations
+        for pair in (profile.get("correlations") or [])[:2]:
+            r = pair["correlation"]
+            parts.append(f"{pair['col_a']}↔{pair['col_b']} r={r}")
+        return ", ".join(parts)
+
+    data_context = _build_data_context(data_profile)
+
     # Prepare specific prompts
     cases = [
         ("eli5", ELI5_PROMPT),
         ("architecture", ARCHITECTURE_PROMPT),
         ("analyst", ANALYST_PROMPT)
     ]
-    
+
     # Fire off the 3 concurrent LLM fetches
     llm_tasks = []
     for fmt, prompt in cases:
         user_prompt = _build_user_prompt(data_profile, fmt)
         task = asyncio.create_task(
-            _generate_single_story_stream(prompt, user_prompt, fmt, session_id, event_queue, state_tracker)
+            _generate_single_story_stream(prompt, user_prompt, fmt, session_id, event_queue, state_tracker, data_context)
         )
         llm_tasks.append(task)
         

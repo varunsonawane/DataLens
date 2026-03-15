@@ -1,9 +1,15 @@
 import { useState, useCallback, useEffect } from 'react';
 import axios from 'axios';
 import { useSessionStore } from '../store/sessionStore';
+import { useAuthStore, getAuthHeader } from '../store/authStore';
 import type { Session, SessionListItem } from '../types';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080';
+
+function authHeaders(): Record<string, string> {
+  const header = getAuthHeader();
+  return header ? { Authorization: header } : {};
+}
 
 interface UseSessionsReturn {
   sessions: SessionListItem[];
@@ -19,19 +25,21 @@ export function useSessions(): UseSessionsReturn {
   const [error, setError] = useState<string | null>(null);
 
   const { setSessionList, loadSession: storeLoadSession, sessionList } = useSessionStore();
+  // Re-fetch sessions when auth state changes (login/logout/guest)
+  const authKey = useAuthStore((s) => s.appToken ?? s.guestId ?? 'none');
 
   const refreshSessions = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await axios.get<SessionListItem[]>(`${BACKEND_URL}/sessions`);
-      const sessions = response.data;
-      setSessionList(sessions);
+      const response = await axios.get<SessionListItem[]>(`${BACKEND_URL}/sessions`, {
+        headers: authHeaders(),
+      });
+      setSessionList(response.data);
     } catch (err) {
-      const message =
-        axios.isAxiosError(err)
-          ? err.response?.data?.detail || err.message
-          : 'Failed to fetch sessions';
+      const message = axios.isAxiosError(err)
+        ? err.response?.data?.detail || err.message
+        : 'Failed to fetch sessions';
       setError(message);
       console.error('Failed to fetch sessions:', err);
     } finally {
@@ -44,16 +52,14 @@ export function useSessions(): UseSessionsReturn {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await axios.get<Session>(
-          `${BACKEND_URL}/sessions/${sessionId}`
-        );
-        const session = response.data;
-        storeLoadSession(session);
+        const response = await axios.get<Session>(`${BACKEND_URL}/sessions/${sessionId}`, {
+          headers: authHeaders(),
+        });
+        storeLoadSession(response.data);
       } catch (err) {
-        const message =
-          axios.isAxiosError(err)
-            ? err.response?.data?.detail || err.message
-            : 'Failed to load session';
+        const message = axios.isAxiosError(err)
+          ? err.response?.data?.detail || err.message
+          : 'Failed to load session';
         setError(message);
         console.error('Failed to load session:', err);
       } finally {
@@ -68,20 +74,22 @@ export function useSessions(): UseSessionsReturn {
       setIsLoading(true);
       setError(null);
       try {
-        await axios.delete(`${BACKEND_URL}/sessions/${sessionId}`);
+        await axios.delete(`${BACKEND_URL}/sessions/${sessionId}`, {
+          headers: authHeaders(),
+        });
         await refreshSessions();
-        if (useSessionStore.getState().sessionId === sessionId) {
-          useSessionStore.getState().resetStream();
-          useSessionStore.getState().setSessionId(null);
-          useSessionStore.getState().setDataProfile(null);
-          useSessionStore.getState().currentSession = null;
+        const store = useSessionStore.getState();
+        if (store.sessionId === sessionId) {
+          store.resetStream();
+          store.setSessionId(null);
+          store.setDataProfile(null);
+          store.currentSession = null;
         }
         return true;
       } catch (err) {
-        const message =
-          axios.isAxiosError(err)
-            ? err.response?.data?.detail || err.message
-            : 'Failed to delete session';
+        const message = axios.isAxiosError(err)
+          ? err.response?.data?.detail || err.message
+          : 'Failed to delete session';
         setError(message);
         console.error('Failed to delete session:', err);
         return false;
@@ -92,17 +100,10 @@ export function useSessions(): UseSessionsReturn {
     [refreshSessions]
   );
 
-  // Fetch sessions on mount
+  // Refresh when component mounts or auth state changes
   useEffect(() => {
     refreshSessions();
-  }, [refreshSessions]);
+  }, [refreshSessions, authKey]);
 
-  return {
-    sessions: sessionList,
-    loadSession,
-    deleteSession,
-    refreshSessions,
-    isLoading,
-    error,
-  };
+  return { sessions: sessionList, loadSession, deleteSession, refreshSessions, isLoading, error };
 }

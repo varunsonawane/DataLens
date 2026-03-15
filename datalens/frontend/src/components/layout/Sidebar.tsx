@@ -1,24 +1,65 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Upload as UploadIcon,
   MessageSquare,
   FileText,
-  BarChart2,
   Settings,
   Sparkles,
-  Trash2
+  Trash2,
+  User,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useSessionStore } from '../../store/sessionStore';
 import { useThemeStore } from '../../store/themeStore';
+import { useAuthStore } from '../../store/authStore';
 import { useSessions } from '../../hooks/useSessions';
+import { UserProfilePanel } from '../auth/UserProfilePanel';
 
 const WORKSPACE_LINKS = [
   { id: 'upload', label: 'Upload', icon: <UploadIcon size={18} /> },
   { id: 'ai', label: 'AI Assistant', icon: <MessageSquare size={18} /> },
   { id: 'story', label: 'Data Story', icon: <FileText size={18} /> },
 ];
+// Sidebar-sized initials avatar (40px)
+const AVATAR_GRADIENTS = [
+  'from-violet-500 to-indigo-600',
+  'from-emerald-500 to-teal-600',
+  'from-rose-500 to-pink-600',
+  'from-amber-500 to-orange-600',
+  'from-cyan-500 to-sky-600',
+  'from-fuchsia-500 to-purple-600',
+  'from-lime-500 to-green-600',
+  'from-red-500 to-rose-600',
+];
+
+function nameHash(name: string): number {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  return h;
+}
+
+function SidebarInitialsAvatar({ name }: { name: string }) {
+  const initials = name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0].toUpperCase())
+    .join('') || '?';
+  const gradient = AVATAR_GRADIENTS[nameHash(name) % AVATAR_GRADIENTS.length];
+  return (
+    <div
+      className={clsx(
+        'h-10 w-10 rounded-full flex items-center justify-center select-none',
+        `bg-gradient-to-br ${gradient}`,
+        'ring-2 ring-emerald-500/50 ring-offset-2 ring-offset-white dark:ring-offset-slate-900',
+      )}
+    >
+      <span className="text-xs font-bold text-white leading-none">{initials}</span>
+    </div>
+  );
+}
+
 // Helper to format iso strings to readable short dates
 function formatDate(iso: string) {
   try {
@@ -32,7 +73,9 @@ export function SidebarContent() {
   const { sidebarOpen: isExpanded } = useThemeStore();
   const { sessionId, resetStream, setCurrentSession, setSessionId, setDataProfile, dashboardMode, setDashboardMode } = useSessionStore();
   const { sessions, loadSession, deleteSession, isLoading } = useSessions();
-  
+  const { user, isGuest } = useAuthStore();
+  const [profileOpen, setProfileOpen] = useState(false);
+
   // Determine active item based on dashboardMode
   let activeItemId = 'upload';
   if (dashboardMode === 'directory') activeItemId = 'story';
@@ -50,9 +93,9 @@ export function SidebarContent() {
   return (
     <div className="flex justify-between flex-col h-full w-full py-6">
       <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden px-4 gap-8">
-        
+
         {/* Logo Section */}
-        <div 
+        <div
           className="flex items-center gap-3 px-2 mb-2 cursor-pointer group"
           onClick={handleNewSession}
         >
@@ -98,8 +141,8 @@ export function SidebarContent() {
                 }}
                 className={clsx(
                   "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group w-full text-left",
-                  isActive 
-                    ? "bg-emerald-50 dark:bg-slate-800/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-slate-700/50" 
+                  isActive
+                    ? "bg-emerald-50 dark:bg-slate-800/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-slate-700/50"
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/20 border border-transparent"
                 )}
               >
@@ -117,7 +160,7 @@ export function SidebarContent() {
                   {link.label}
                 </motion.span>
                 {isActive && isExpanded && (
-                  <motion.div 
+                  <motion.div
                     layoutId="active-indicator"
                     className="absolute left-0 w-1 h-6 bg-emerald-500 rounded-r-full"
                   />
@@ -215,7 +258,7 @@ export function SidebarContent() {
                     </span>
                   </motion.div>
                </div>
-               
+
                <div className="absolute right-3 flex items-center">
                  {/* Delete Button (visible on hover) */}
                  <div
@@ -248,35 +291,86 @@ export function SidebarContent() {
 
       </div>
 
-      {/* User settings area at the bottom */}
-      <div className="mt-4 px-4">
-        <button className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/30 transition-colors group">
-          <div className="flex items-center gap-3">
-            <img
-              src="https://api.dicebear.com/7.x/notionists/svg?seed=Alex&backgroundColor=10b981"
-              className="h-10 w-10 flex-shrink-0 rounded-full bg-emerald-500/20 p-0.5 border border-emerald-500/30"
-              alt="Avatar"
-            />
-            <motion.div 
-              animate={{
-                display: isExpanded ? 'block' : 'none',
-                opacity: isExpanded ? 1 : 0,
-              }}
-              initial={false}
-              className="flex flex-col items-start min-w-0 text-left"
-            >
-              <p className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate w-full">Alex Chen</p>
-              <p className="text-xs font-medium text-slate-500 truncate w-full">Pro Plan</p>
-            </motion.div>
+      {/* User profile area at the bottom */}
+      <div className="mt-4 px-3">
+        {/* Thin top separator */}
+        <div className="mb-3 h-px bg-slate-200/60 dark:bg-slate-700/40" />
+
+        <button
+          onClick={() => setProfileOpen(true)}
+          className={clsx(
+            "group w-full flex items-center rounded-xl transition-all duration-200",
+            "bg-transparent hover:bg-slate-50/50 dark:hover:bg-slate-800/20",
+            "border border-transparent hover:border-slate-200 dark:hover:border-slate-700/50",
+            isExpanded ? "gap-3 px-2.5 py-2 justify-between" : "justify-center p-2"
+          )}
+        >
+          {/* Avatar */}
+          <div className="relative flex-shrink-0">
+            {user?.picture ? (
+              <img
+                src={user.picture}
+                alt={user.name}
+                referrerPolicy="no-referrer"
+                className={clsx(
+                  "h-10 w-10 rounded-full object-cover",
+                  "ring-2 ring-emerald-500/50 ring-offset-2 ring-offset-white dark:ring-offset-slate-900"
+                )}
+              />
+            ) : user ? (
+              <SidebarInitialsAvatar name={user.name || user.email} />
+            ) : (
+              <div className="h-10 w-10 rounded-full bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
+                <User size={18} className="text-emerald-500" />
+              </div>
+            )}
+            {/* Amber dot for guest */}
+            {isGuest && (
+              <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-amber-400 border-2 border-white dark:border-slate-900 shadow-sm" />
+            )}
           </div>
+
+          {/* Name + subtitle (expanded only) */}
           <motion.div
-            animate={{ display: isExpanded ? 'block' : 'none', opacity: isExpanded ? 1 : 0 }}
+            animate={{ display: isExpanded ? 'flex' : 'none', opacity: isExpanded ? 1 : 0 }}
             initial={false}
+            className="flex-1 flex-col items-start min-w-0 text-left"
           >
-             <Settings size={16} className="text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300 transition-colors" />
+            <p className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate w-full leading-snug">
+              {user?.name ?? (isGuest ? 'Guest' : 'Sign In')}
+            </p>
+            <p className="text-[11px] font-medium text-slate-400 dark:text-slate-500 truncate w-full leading-snug">
+              {user
+                ? user.auth_method === 'google'
+                  ? 'Google Account'
+                  : user.auth_method === 'password'
+                  ? user.email
+                  : 'Account'
+                : isGuest
+                ? 'Guest session'
+                : 'Not signed in'}
+            </p>
+          </motion.div>
+
+          {/* Settings gear (expanded only) — rotates 45deg on group hover */}
+          <motion.div
+            animate={{ display: isExpanded ? 'flex' : 'none', opacity: isExpanded ? 1 : 0 }}
+            initial={false}
+            className="flex-shrink-0 flex items-center justify-center"
+          >
+            <Settings
+              size={16}
+              className={clsx(
+                "text-slate-400 dark:text-slate-500",
+                "group-hover:text-slate-600 dark:group-hover:text-slate-300",
+                "group-hover:rotate-45 transition-all duration-300"
+              )}
+            />
           </motion.div>
         </button>
       </div>
+
+      <UserProfilePanel open={profileOpen} onClose={() => setProfileOpen(false)} />
     </div>
   );
 }

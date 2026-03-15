@@ -89,13 +89,17 @@ STYLE_SUFFIXES: dict[str, str] = {
 }
 
 
-def _enrich_prompt(prompt: str, story_format: str = "default") -> str:
+def _enrich_prompt(prompt: str, story_format: str = "default", data_context: str = "") -> str:
     """
     Prepend the DataLens visual style prefix and append the format-specific
-    style suffix to a raw image prompt.
+    style suffix to a raw image prompt. Optionally injects data_context between
+    the style prefix and the raw prompt to ground the image in real data facts.
     """
     suffix = STYLE_SUFFIXES.get(story_format, STYLE_SUFFIXES["default"])
-    parts = [DATALENS_VISUAL_STYLE, prompt.strip()]
+    parts = [DATALENS_VISUAL_STYLE]
+    if data_context:
+        parts.append(f"[Data facts: {data_context.strip()}]")
+    parts.append(prompt.strip())
     if suffix:
         parts.append(suffix)
     return " ".join(parts)
@@ -157,12 +161,13 @@ async def generate_image_nano_banana(
     prompt: str,
     session_id: str,
     story_format: str = "default",
+    data_context: str = "",
 ) -> str:
     """
     Generate an image from a prompt using Nano Banana Pro (gemini-3-pro-image-preview).
 
     Steps:
-      1. Enrich the prompt with DataLens visual style
+      1. Enrich the prompt with DataLens visual style (+ optional data_context)
       2. Call Gemini image generation
       3. Upload raw PNG bytes to GCS (datalens-images/{session_id}/{uuid}.png)
       4. Return the public GCS URL
@@ -172,6 +177,8 @@ async def generate_image_nano_banana(
         session_id:   Session ID for GCS path scoping.
         story_format: One of "eli5", "architecture", "analyst", "default".
                       Controls which style suffix is applied.
+        data_context: Optional compact data facts string (e.g. "top genre: Pop 31%, 50k rows").
+                      Injected between the style prefix and raw prompt for numeric grounding.
 
     Returns:
         Public GCS URL string.
@@ -179,7 +186,7 @@ async def generate_image_nano_banana(
     Raises:
         RuntimeError: If image generation or upload fails.
     """
-    enriched = _enrich_prompt(prompt, story_format)
+    enriched = _enrich_prompt(prompt, story_format, data_context)
     logger.info(
         "Generating image for session=%s format=%s prompt_len=%d",
         session_id,
