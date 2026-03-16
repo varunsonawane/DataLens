@@ -30,7 +30,8 @@
       "Bash(GOOGLE_APPLICATION_CREDENTIALS=\"D:/Hackathon/DataLens/datalens/datalens-488301-5e7e5a2f690d.json\" NO_GCE_CHECK=true timeout 10 python:*)",
       "Bash(GRPC_DNS_RESOLVER=native NO_GCE_CHECK=true GOOGLE_APPLICATION_CREDENTIALS=\"D:/Hackathon/DataLens/datalens/datalens-488301-5e7e5a2f690d.json\" timeout 10 python:*)",
       "Bash(D:/Hackathon/DataLens/datalens/.gitignore:*)",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "Bash(cd D:/Hackathon/DataLens/datalens/frontend && npm install @react-oauth/google)"
     ]
   }
 }
