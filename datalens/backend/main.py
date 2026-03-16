@@ -34,6 +34,10 @@ from fastapi.responses import JSONResponse
 # Load environment variables as early as possible so all modules see them
 load_dotenv()
 
+# If running on Cloud Run, remove the hardcoded GOOGLE_APPLICATION_CREDENTIALS from .env
+if os.environ.get("K_SERVICE"):
+    os.environ.pop("GOOGLE_APPLICATION_CREDENTIALS", None)
+
 # ---------------------------------------------------------------------------
 # Logging configuration
 # ---------------------------------------------------------------------------

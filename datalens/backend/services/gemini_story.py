@@ -44,6 +44,10 @@ def _get_client() -> genai.Client:
     if api_key:
         return genai.Client(api_key=api_key)
     # Use Application Default Credentials (ADC) when running on GCP
+    project = os.environ.get("GOOGLE_CLOUD_PROJECT")
+    location = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
+    if project:
+        return genai.Client(vertexai=True, project=project, location=location)
     return genai.Client()
 
 
@@ -264,9 +268,9 @@ def _build_user_prompt(data_profile: dict[str, Any], context_label: str) -> str:
     shape = data_profile.get("shape", {})
     rows = shape.get("rows", "unknown")
     columns_count = shape.get("columns", "unknown")
-    numeric_cols = data_profile.get("numeric_columns", [])
-    categorical_cols = data_profile.get("categorical_columns", [])
-    datetime_cols = data_profile.get("datetime_columns", [])
+    numeric_cols = [c for c in data_profile.get("numeric_columns", []) if c is not None]
+    categorical_cols = [c for c in data_profile.get("categorical_columns", []) if c is not None]
+    datetime_cols = [c for c in data_profile.get("datetime_columns", []) if c is not None]
     correlations = data_profile.get("correlations", [])
     summary = data_profile.get("summary_stats", {})
     col_profiles = data_profile.get("columns", [])

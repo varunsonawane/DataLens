@@ -109,7 +109,7 @@ def _column_profile(df: pd.DataFrame, col: str, datetime_cols: list[str]) -> dic
         "top_values": [],
     }
 
-    if pd.api.types.is_numeric_dtype(series) and col not in datetime_cols:
+    if pd.api.types.is_numeric_dtype(series) and not pd.api.types.is_bool_dtype(series) and col not in datetime_cols:
         numeric_series = series.dropna()
         if len(numeric_series) > 0:
             profile["min"] = _safe_val(numeric_series.min())
@@ -214,9 +214,15 @@ def _summary_stats(df: pd.DataFrame) -> dict[str, Any]:
     total_null = int(df.isna().sum().sum())
     completeness_pct = round((total_cells - total_null) / total_cells * 100, 2) if total_cells > 0 else 100.0
 
-    duplicate_rows = int(df.duplicated().sum())
+    # df.duplicated() on all strings does not release the GIL and freezes the main unblocked asyncio loop.
+    # We skip it for large dataframes to prevent 503 timeouts.
+    if df.shape[0] < 20000:
+        duplicate_rows = int(df.duplicated().sum())
+    else:
+        duplicate_rows = 0
 
-    memory_bytes = int(df.memory_usage(deep=True).sum())
+    # deep=True interrogates every python string object, permanently holding the GIL.
+    memory_bytes = int(df.memory_usage(deep=False).sum())
 
     return {
         "total_cells": total_cells,
@@ -271,7 +277,7 @@ def _profile_sync(df: pd.DataFrame) -> dict[str, Any]:
     for col in df.columns:
         if col in datetime_cols:
             continue
-        if pd.api.types.is_numeric_dtype(df[col]):
+        if pd.api.types.is_numeric_dtype(df[col]) and not pd.api.types.is_bool_dtype(df[col]):
             numeric_cols.append(col)
         else:
             categorical_cols.append(col)

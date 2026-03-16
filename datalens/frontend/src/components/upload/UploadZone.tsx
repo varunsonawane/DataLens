@@ -84,8 +84,8 @@ function ProfileSummary({ profile, onContinue }: ProfileSummaryProps) {
   const completeness =
     cols.length > 0
       ? Math.round(
-          cols.reduce((sum, c) => sum + (100 - (c.null_pct || 0)), 0) / cols.length,
-        )
+        cols.reduce((sum, c) => sum + (100 - (c.null_pct || 0)), 0) / cols.length,
+      )
       : 100;
 
   // ── DB stats ───────────────────────────────────────────────────────────────
@@ -93,17 +93,17 @@ function ProfileSummary({ profile, onContinue }: ProfileSummaryProps) {
 
   const statsRow = isDb
     ? [
-        { label: 'Tables',        value: profile.total_tables ?? 0,        cls: 'text-emerald-600 dark:text-emerald-400' },
-        { label: 'Columns',       value: profile.total_columns ?? 0,       cls: 'text-violet-600 dark:text-violet-400'  },
-        { label: 'Relationships', value: profile.total_relationships ?? 0, cls: 'text-cyan-600 dark:text-cyan-400'      },
-        { label: 'Dialect',       value: profile.dialect ?? 'sql',         cls: 'text-amber-600 dark:text-amber-400'    },
-      ]
+      { label: 'Tables', value: profile.total_tables ?? 0, cls: 'text-emerald-600 dark:text-emerald-400' },
+      { label: 'Columns', value: profile.total_columns ?? 0, cls: 'text-violet-600 dark:text-violet-400' },
+      { label: 'Relationships', value: profile.total_relationships ?? 0, cls: 'text-cyan-600 dark:text-cyan-400' },
+      { label: 'Dialect', value: profile.dialect ?? 'sql', cls: 'text-amber-600 dark:text-amber-400' },
+    ]
     : [
-        { label: 'Completeness', value: `${completeness}%`, cls: 'text-emerald-600 dark:text-emerald-400' },
-        { label: 'Numeric cols', value: numericCount,       cls: 'text-violet-600 dark:text-violet-400'  },
-        { label: 'Categorical',  value: categoricalCount,   cls: 'text-cyan-600 dark:text-cyan-400'      },
-        { label: 'Datetime',     value: datetimeCount,      cls: 'text-amber-600 dark:text-amber-400'    },
-      ];
+      { label: 'Completeness', value: `${completeness}%`, cls: 'text-emerald-600 dark:text-emerald-400' },
+      { label: 'Numeric cols', value: numericCount, cls: 'text-violet-600 dark:text-violet-400' },
+      { label: 'Categorical', value: categoricalCount, cls: 'text-cyan-600 dark:text-cyan-400' },
+      { label: 'Datetime', value: datetimeCount, cls: 'text-amber-600 dark:text-amber-400' },
+    ];
 
   const subtitle = isDb
     ? `${profile.total_tables} tables · ${profile.total_columns} columns · ${profile.dialect}`
@@ -458,7 +458,7 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
                         : 'Drag and drop your files'}
                   </p>
                   <p className="text-sm mb-8 text-slate-500 dark:text-slate-400">
-                    Supports CSV, Excel, JSON, PDF, and images
+                    Supports CSV, Excel and JSON
                   </p>
 
                   <span
@@ -480,153 +480,153 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
                   />
                 </div>
               </motion.div>
-          ) : (
-            <motion.div
-              key="db"
-              initial={{ opacity: 0, x: 16 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -16 }}
-              transition={{ duration: 0.25 }}
-            >
-              <form
-                onSubmit={handleDbConnect}
-                className="rounded-3xl p-8 space-y-5 flex flex-col items-center justify-center min-h-[300px] bg-white/50 dark:bg-slate-900/40 border border-slate-300 dark:border-white/5 transition-colors"
+            ) : (
+              <motion.div
+                key="db"
+                initial={{ opacity: 0, x: 16 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -16 }}
+                transition={{ duration: 0.25 }}
               >
-                <div className="grid grid-cols-2 gap-4 w-full">
-                  {/* DB Type */}
-                  <div>
-                    <label
-                      className="block text-xs font-medium mb-1.5 text-slate-600 dark:text-slate-400"
-                    >
-                      Database Type
-                    </label>
-                    <select
-                      value={dbForm.db_type}
-                      onChange={(e) => setDbForm((p) => ({ ...p, db_type: e.target.value }))}
-                      className="w-full px-3 py-2.5 rounded-xl text-sm outline-none bg-white dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50 text-slate-900 dark:text-white focus:border-emerald-500/50 transition-colors"
-                    >
-                      {['postgresql', 'mysql', 'sqlite'].map((o) => (
-                        <option key={o} value={o} className="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white">
-                          {o}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Host */}
-                  <div>
-                    <label
-                      className="block text-xs font-medium mb-1.5 text-slate-600 dark:text-slate-400"
-                    >
-                      Host
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="localhost"
-                      value={dbForm.host}
-                      onChange={(e) => setDbForm((p) => ({ ...p, host: e.target.value }))}
-                      className="w-full px-3 py-2.5 rounded-xl text-sm outline-none bg-white dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-emerald-500/50 transition-colors"
-                    />
-                  </div>
-
-                  {/* Port */}
-                  <div>
-                    <label
-                      className="block text-xs font-medium mb-1.5 text-slate-600 dark:text-slate-400"
-                    >
-                      Port
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="5432"
-                      value={dbForm.port}
-                      onChange={(e) => setDbForm((p) => ({ ...p, port: e.target.value }))}
-                      className="w-full px-3 py-2.5 rounded-xl text-sm outline-none bg-white dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-emerald-500/50 transition-colors"
-                    />
-                  </div>
-
-                  {/* Database */}
-                  <div>
-                    <label
-                      className="block text-xs font-medium mb-1.5 text-slate-600 dark:text-slate-400"
-                    >
-                      Database
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="mydb"
-                      value={dbForm.database}
-                      onChange={(e) => setDbForm((p) => ({ ...p, database: e.target.value }))}
-                      className="w-full px-3 py-2.5 rounded-xl text-sm outline-none bg-white dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-emerald-500/50 transition-colors"
-                    />
-                  </div>
-
-                  {/* Username */}
-                  <div>
-                    <label
-                      className="block text-xs font-medium mb-1.5 text-slate-600 dark:text-slate-400"
-                    >
-                      Username
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="postgres"
-                      value={dbForm.username}
-                      onChange={(e) => setDbForm((p) => ({ ...p, username: e.target.value }))}
-                      className="w-full px-3 py-2.5 rounded-xl text-sm outline-none bg-white dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-emerald-500/50 transition-colors"
-                    />
-                  </div>
-
-                  {/* Password */}
-                  <div>
-                    <label
-                      className="block text-xs font-medium mb-1.5 text-slate-600 dark:text-slate-400"
-                    >
-                      Password
-                    </label>
-                    <input
-                      type="password"
-                      placeholder="••••••••"
-                      value={dbForm.password}
-                      onChange={(e) => setDbForm((p) => ({ ...p, password: e.target.value }))}
-                      className="w-full px-3 py-2.5 rounded-xl text-sm outline-none bg-white dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-emerald-500/50 transition-colors"
-                    />
-                  </div>
-                </div>
-
-                {/* Schema filter — optional, full width */}
-                <div className="w-full">
-                  <label
-                    className="block text-xs font-medium mb-1.5 text-slate-600 dark:text-slate-400"
-                  >
-                    Schema Filter <span className="font-normal text-slate-400">(optional — leave blank to inspect all schemas)</span>
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="public"
-                    value={dbForm.schema_filter}
-                    onChange={(e) => setDbForm((p) => ({ ...p, schema_filter: e.target.value }))}
-                    className="w-full px-3 py-2.5 rounded-xl text-sm outline-none bg-white dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-emerald-500/50 transition-colors"
-                  />
-                </div>
-
-                <motion.button
-                  type="submit"
-                  disabled={isUploading}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.97 }}
-                  className="w-full mt-2 py-3 rounded-xl text-sm font-semibold text-white dark:text-slate-950 flex items-center justify-center gap-2 bg-emerald-600 dark:bg-emerald-500 hover:bg-emerald-500 dark:hover:bg-emerald-400 transition-colors disabled:opacity-50"
-                  style={{
-                    boxShadow: '0 4px 20px rgba(16,185,129,0.3)',
-                  }}
+                <form
+                  onSubmit={handleDbConnect}
+                  className="rounded-3xl p-8 space-y-5 flex flex-col items-center justify-center min-h-[300px] bg-white/50 dark:bg-slate-900/40 border border-slate-300 dark:border-white/5 transition-colors"
                 >
-                  <Globe2 size={16} />
-                  {isUploading ? 'Connecting...' : 'Connect & Analyse'}
-                </motion.button>
-              </form>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                  <div className="grid grid-cols-2 gap-4 w-full">
+                    {/* DB Type */}
+                    <div>
+                      <label
+                        className="block text-xs font-medium mb-1.5 text-slate-600 dark:text-slate-400"
+                      >
+                        Database Type
+                      </label>
+                      <select
+                        value={dbForm.db_type}
+                        onChange={(e) => setDbForm((p) => ({ ...p, db_type: e.target.value }))}
+                        className="w-full px-3 py-2.5 rounded-xl text-sm outline-none bg-white dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50 text-slate-900 dark:text-white focus:border-emerald-500/50 transition-colors"
+                      >
+                        {['postgresql', 'mysql', 'sqlite'].map((o) => (
+                          <option key={o} value={o} className="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white">
+                            {o}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Host */}
+                    <div>
+                      <label
+                        className="block text-xs font-medium mb-1.5 text-slate-600 dark:text-slate-400"
+                      >
+                        Host
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="localhost"
+                        value={dbForm.host}
+                        onChange={(e) => setDbForm((p) => ({ ...p, host: e.target.value }))}
+                        className="w-full px-3 py-2.5 rounded-xl text-sm outline-none bg-white dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-emerald-500/50 transition-colors"
+                      />
+                    </div>
+
+                    {/* Port */}
+                    <div>
+                      <label
+                        className="block text-xs font-medium mb-1.5 text-slate-600 dark:text-slate-400"
+                      >
+                        Port
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="5432"
+                        value={dbForm.port}
+                        onChange={(e) => setDbForm((p) => ({ ...p, port: e.target.value }))}
+                        className="w-full px-3 py-2.5 rounded-xl text-sm outline-none bg-white dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-emerald-500/50 transition-colors"
+                      />
+                    </div>
+
+                    {/* Database */}
+                    <div>
+                      <label
+                        className="block text-xs font-medium mb-1.5 text-slate-600 dark:text-slate-400"
+                      >
+                        Database
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="mydb"
+                        value={dbForm.database}
+                        onChange={(e) => setDbForm((p) => ({ ...p, database: e.target.value }))}
+                        className="w-full px-3 py-2.5 rounded-xl text-sm outline-none bg-white dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-emerald-500/50 transition-colors"
+                      />
+                    </div>
+
+                    {/* Username */}
+                    <div>
+                      <label
+                        className="block text-xs font-medium mb-1.5 text-slate-600 dark:text-slate-400"
+                      >
+                        Username
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="postgres"
+                        value={dbForm.username}
+                        onChange={(e) => setDbForm((p) => ({ ...p, username: e.target.value }))}
+                        className="w-full px-3 py-2.5 rounded-xl text-sm outline-none bg-white dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-emerald-500/50 transition-colors"
+                      />
+                    </div>
+
+                    {/* Password */}
+                    <div>
+                      <label
+                        className="block text-xs font-medium mb-1.5 text-slate-600 dark:text-slate-400"
+                      >
+                        Password
+                      </label>
+                      <input
+                        type="password"
+                        placeholder="••••••••"
+                        value={dbForm.password}
+                        onChange={(e) => setDbForm((p) => ({ ...p, password: e.target.value }))}
+                        className="w-full px-3 py-2.5 rounded-xl text-sm outline-none bg-white dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-emerald-500/50 transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Schema filter — optional, full width */}
+                  <div className="w-full">
+                    <label
+                      className="block text-xs font-medium mb-1.5 text-slate-600 dark:text-slate-400"
+                    >
+                      Schema Filter <span className="font-normal text-slate-400">(optional — leave blank to inspect all schemas)</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="public"
+                      value={dbForm.schema_filter}
+                      onChange={(e) => setDbForm((p) => ({ ...p, schema_filter: e.target.value }))}
+                      className="w-full px-3 py-2.5 rounded-xl text-sm outline-none bg-white dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700/50 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-emerald-500/50 transition-colors"
+                    />
+                  </div>
+
+                  <motion.button
+                    type="submit"
+                    disabled={isUploading}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.97 }}
+                    className="w-full mt-2 py-3 rounded-xl text-sm font-semibold text-white dark:text-slate-950 flex items-center justify-center gap-2 bg-emerald-600 dark:bg-emerald-500 hover:bg-emerald-500 dark:hover:bg-emerald-400 transition-colors disabled:opacity-50"
+                    style={{
+                      boxShadow: '0 4px 20px rgba(16,185,129,0.3)',
+                    }}
+                  >
+                    <Globe2 size={16} />
+                    {isUploading ? 'Connecting...' : 'Connect & Analyse'}
+                  </motion.button>
+                </form>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Error banner */}

@@ -76,6 +76,7 @@ opentelemetry-semantic-conventions==0.59b0
 SQLAlchemy==2.0.46
 aiosqlite==0.22.1
 alembic==1.18.4
+psycopg2-binary==2.9.9
 
 # --- HTTP / Async ---
 httpx==0.28.1

@@ -11,9 +11,10 @@ import { useSessionStore } from '../../store/sessionStore';
 import { useSessions } from '../../hooks/useSessions';
 import { useStoryStream } from '../../hooks/useStoryStream';
 import type { DataProfile } from '../../types';
+import { AlertCircle } from 'lucide-react';
 
 export function Dashboard() {
-  const { startStream } = useStoryStream();
+  const { startStream, error, cancelStream } = useStoryStream();
   const { refreshSessions } = useSessions();
   const {
     sessionId,
@@ -85,8 +86,25 @@ export function Dashboard() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.35 }}
-                className="flex-1 flex flex-col overflow-hidden"
+                className="flex-1 flex flex-col overflow-hidden relative"
               >
+                {/* Floating error banner for streaming failures */}
+                <AnimatePresence>
+                  {error && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -20, x: '-50%' }}
+                      animate={{ opacity: 1, y: 0, x: '-50%' }}
+                      exit={{ opacity: 0, y: -20, x: '-50%' }}
+                      className="absolute top-6 left-1/2 z-[100] bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-2 max-w-lg w-[90%] sm:w-auto"
+                    >
+                      <AlertCircle size={18} className="flex-shrink-0" />
+                      <span className="text-sm font-medium leading-tight">
+                        {error}
+                      </span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
                 {/* Story tabs — main scrollable area */}
                 <div className="flex-1 overflow-hidden" style={{ minHeight: 0 }}>
                   <StoryTabs />

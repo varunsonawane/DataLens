@@ -233,6 +233,38 @@ async def _build_upload_response(df: pd.DataFrame, filename: str, owner_id: Opti
 # ---------------------------------------------------------------------------
 
 
+def _parse_file_sync(suffix: str, content: bytes, filename: str) -> pd.DataFrame:
+    """Synchronously parse uploaded file bytes into a DataFrame."""
+    buf = io.BytesIO(content)
+    if suffix == ".csv":
+        # Try common encodings
+        for encoding in ("utf-8", "latin-1", "cp1252"):
+            try:
+                buf.seek(0)
+                return pd.read_csv(buf, encoding=encoding, low_memory=False)
+            except UnicodeDecodeError:
+                continue
+        raise ValueError("Could not decode CSV with utf-8, latin-1, or cp1252 encoding.")
+    elif suffix == ".json":
+        try:
+            return pd.read_json(buf)
+        except Exception:
+            # Fallback to lines=True or manual parsing if standard read_json fails
+            buf.seek(0)
+            import json
+            data = json.load(buf)
+            if isinstance(data, dict):
+                # If it's a single dict, wrap in a list
+                return pd.DataFrame([data])
+            else:
+                return pd.DataFrame(data)
+    elif suffix in (".pdf", ".png", ".jpg", ".jpeg", ".webp", ".gif"):
+        # For PDF/Images, create a dummy dataframe representing document metadata
+        return pd.DataFrame([{"filename": filename, "type": f"File ({suffix})", "size": len(content)}])
+    else:
+        return pd.read_excel(buf, engine="openpyxl")
+
+
 @router.post("/file", response_model=UploadResponse, status_code=status.HTTP_201_CREATED)
 async def upload_file(
     file: Annotated[UploadFile, File(description="CSV or Excel file (max 100 MB)")],
@@ -242,11 +274,13 @@ async def upload_file(
     Accept a CSV, Excel, JSON, PDF or Image file upload, profile it with Pandas, create a session.
 
     - Validates file extension and size
-    - Reads with pandas (CSV, JSON, openpyxl)
+    - Reads with pandas (CSV, JSON, openpyxl) in a background thread
     - Calls profile_dataframe
     - Persists session to GCS + Firestore
     - Returns { session_id, filename, rows, columns, data_profile }
     """
+    import asyncio
+    
     # Validate filename / extension
     filename = file.filename or "upload"
     suffix = ""
@@ -272,39 +306,9 @@ async def upload_file(
             detail="Uploaded file is empty.",
         )
 
-    # Parse into DataFrame
+    # Parse into DataFrame asynchronously
     try:
-        buf = io.BytesIO(content)
-        if suffix == ".csv":
-            # Try common encodings
-            for encoding in ("utf-8", "latin-1", "cp1252"):
-                try:
-                    buf.seek(0)
-                    df = pd.read_csv(buf, encoding=encoding, low_memory=False)
-                    break
-                except UnicodeDecodeError:
-                    continue
-            else:
-                raise ValueError("Could not decode CSV with utf-8, latin-1, or cp1252 encoding.")
-        elif suffix == ".json":
-            try:
-                df = pd.read_json(buf)
-            except Exception:
-                # Fallback to lines=True or manual parsing if standard read_json fails
-                buf.seek(0)
-                import json
-                data = json.load(buf)
-                if isinstance(data, dict):
-                    # If it's a single dict, wrap in a list
-                    df = pd.DataFrame([data])
-                else:
-                    df = pd.DataFrame(data)
-        elif suffix in (".pdf", ".png", ".jpg", ".jpeg", ".webp", ".gif"):
-            # For PDF/Images, create a dummy dataframe representing document metadata
-            # Or if it's meant to be processed via document AI later.
-            df = pd.DataFrame([{"filename": filename, "type": f"File ({suffix})", "size": len(content)}])
-        else:
-            df = pd.read_excel(buf, engine="openpyxl")
+        df = await asyncio.to_thread(_parse_file_sync, suffix, content, filename)
     except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,

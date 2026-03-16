@@ -1,0 +1,3 @@
+Session ID: 02aef204-7c90-43e3-862b-6073146d53a1
+Status: 422
+{"detail":[{"type":"missing","loc":["body","data_profile"],"msg":"Field required","input":{"session_
