@@ -108,7 +108,7 @@ export const MobileSidebar = ({
 }: React.ComponentProps<"div">) => {
   const { sidebarOpen: open, toggleSidebar } = useThemeStore();
   return (
-    <>
+    <div className="md:hidden">
       <AnimatePresence>
         {open && (
             <motion.div
@@ -134,7 +134,7 @@ export const MobileSidebar = ({
             </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </div>
   );
 };
 
