@@ -8,14 +8,16 @@
 
 - **Live App:** [Try DataLens Live](https://datalens-backend-844382502061.us-central1.run.app/)
   - *Tip: You can use the provided [`spotify_tracks.csv`](./spotify_tracks.csv) as a sample dataset to test out the platform!*
-- **Live Demo Video:** [Watch DataLens in Action (YouTube)](https://www.youtube.com/watch?v=fWmHkDYD4-4)
-- **Google Cloud Deployment Proof:** [Architecture & Deployment (YouTube)](https://www.youtube.com/watch?v=LFAzdkaty1g)
+- **Live Demo Video:** 
+  [![Watch DataLens in Action (YouTube)](https://img.youtube.com/vi/fWmHkDYD4-4/0.jpg)](https://www.youtube.com/watch?v=fWmHkDYD4-4)
+- **Google Cloud Deployment Proof:** 
+  [![Architecture & Deployment (YouTube)](https://img.youtube.com/vi/LFAzdkaty1g/0.jpg)](https://www.youtube.com/watch?v=LFAzdkaty1g)
 
 ---
 
 ## 🏗️ Architecture & Core Flow
 
-![DataLens Architecture](./Datalens_Architecture.png)
+![DataLens Architecture](./datalens/Datalens%20Architecture.png)
 
 1. **Upload & Ingest:** Users upload CSV/Excel files or connect their database.
 2. **Profiling:** Pandas automatically profiles the dataset to build a strong `data_profile` context.
