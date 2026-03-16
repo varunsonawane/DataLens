@@ -18,7 +18,7 @@ google-genai==1.64.0
 google-adk==1.25.1
 
 # --- Auth ---
-google-auth==2.40.3
+google-auth>=2.47.0
 passlib[bcrypt]==1.7.4
 bcrypt==4.3.0
 

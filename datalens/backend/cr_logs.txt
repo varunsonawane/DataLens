@@ -1,0 +1,96 @@
+2026-03-15 23:51:40 2026-03-15 23:51:40,612 | WARNING  | main:111 | GCS client init failed (will retry on first request): File D:\Hackathon\DataLens\datalens\datalens-488301-c8474e701e91.json was not found.
+2026-03-15 23:51:40 2026-03-15 23:51:40,612 | WARNING  | main:122 | Firestore client init failed (will retry on first request): File D:\Hackathon\DataLens\datalens\datalens-488301-c8474e701e91.json was not found.
+2026-03-15 23:51:40 2026-03-15 23:51:40,612 | INFO     | main:143 | DataLens backend ready. Environment: project=datalens-488301, location=us-central1
+2026-03-15 23:51:40 2026-03-15 23:51:40,612 | WARNING  | main:111 | GCS client init failed (will retry on first request): File D:\Hackathon\DataLens\datalens\datalens-488301-c8474e701e91.json was not found.
+2026-03-15 23:51:40 2026-03-15 23:51:40,612 | WARNING  | main:122 | Firestore client init failed (will retry on first request): File D:\Hackathon\DataLens\datalens\datalens-488301-c8474e701e91.json was not found.
+2026-03-15 23:51:40 INFO:     Application startup complete.
+2026-03-15 23:51:40 2026-03-15 23:51:40,612 | INFO     | main:143 | DataLens backend ready. Environment: project=datalens-488301, location=us-central1
+2026-03-15 23:51:40 INFO:     Application startup complete.
+2026-03-15 23:51:40 INFO:     169.254.169.126:41514 - "WebSocket /ws/agent/38cbabb6-6e0f-42a9-8755-34d50ecfae62?token=guest_d0a5db1b-2303-4d71-a32d-6bb0f9e529da" [accepted]
+2026-03-15 23:51:40 2026-03-15 23:51:40,662 | INFO     | routers.agent:68 | WebSocket connected: session=38cbabb6-6e0f-42a9-8755-34d50ecfae62, raw_token=guest_d0a5db1b-2303-4d71-a32d-6bb0f9e529da
+2026-03-15 23:51:40 2026-03-15 23:51:40,662 | INFO     | routers.agent:74 | WebSocket auth resolved token to owner_id=guest_d0a5db1b-2303-4d71-a32d-6bb0f9e529da using header=Guest guest_d0a5db1b-2303-4d71-a32d-6bb0f9e529da
+2026-03-15 23:51:40 INFO:     connection open
+2026-03-15 23:52:04 2026-03-15 23:52:04,634 | INFO     | routers.agent:147 | Client disconnected (receive): session=38cbabb6-6e0f-42a9-8755-34d50ecfae62
+2026-03-15 23:52:04 INFO:     connection closed
+2026-03-15 23:52:04 2026-03-15 23:52:04,635 | INFO     | services.live_agent:664 | Cleaned up agent for session 38cbabb6-6e0f-42a9-8755-34d50ecfae62.
+2026-03-15 23:52:04 2026-03-15 23:52:04,635 | INFO     | routers.agent:264 | WebSocket handler exited: session=38cbabb6-6e0f-42a9-8755-34d50ecfae62
+2026-03-15 23:52:05 GET 200 https://datalens-backend-844382502061.us-central1.run.app/sessions?type=all
+2026-03-15 23:52:05 GET 200 https://datalens-backend-844382502061.us-central1.run.app/sessions?type=data
+2026-03-15 23:52:05 2026-03-15 23:52:05,033 | ERROR    | services.gcs_service:451 | list_sessions Firestore error: File D:\Hackathon\DataLens\datalens\datalens-488301-c8474e701e91.json was not found.
+2026-03-15 23:52:05 INFO:     169.254.169.126:20166 - "GET /sessions?type=all HTTP/1.1" 200 OK
+2026-03-15 23:52:05 2026-03-15 23:52:05,035 | ERROR    | services.gcs_service:451 | list_sessions Firestore error: File D:\Hackathon\DataLens\datalens\datalens-488301-c8474e701e91.json was not found.
+2026-03-15 23:52:05 INFO:     169.254.169.126:20178 - "GET /sessions?type=data HTTP/1.1" 200 OK
+2026-03-15 23:52:05 GET 101 https://datalens-backend-844382502061.us-central1.run.app/ws/agent/agent_a38a1c11-545b-4f36-b57b-815e42b76064?token=guest_d0a5db1b-2303-4d71-a32d-6bb0f9e529da
+2026-03-15 23:52:05 INFO:     169.254.169.126:20180 - "WebSocket /ws/agent/agent_a38a1c11-545b-4f36-b57b-815e42b76064?token=guest_d0a5db1b-2303-4d71-a32d-6bb0f9e529da" [accepted]
+2026-03-15 23:52:05 2026-03-15 23:52:05,091 | INFO     | routers.agent:68 | WebSocket connected: session=agent_a38a1c11-545b-4f36-b57b-815e42b76064, raw_token=guest_d0a5db1b-2303-4d71-a32d-6bb0f9e529da
+2026-03-15 23:52:05 2026-03-15 23:52:05,091 | INFO     | routers.agent:74 | WebSocket auth resolved token to owner_id=guest_d0a5db1b-2303-4d71-a32d-6bb0f9e529da using header=Guest guest_d0a5db1b-2303-4d71-a32d-6bb0f9e529da
+2026-03-15 23:52:05 INFO:     connection open
+2026-03-15 23:52:06 2026-03-15 23:52:06,561 | INFO     | routers.agent:147 | Client disconnected (receive): session=agent_a38a1c11-545b-4f36-b57b-815e42b76064
+2026-03-15 23:52:06 INFO:     connection closed
+2026-03-15 23:52:06 2026-03-15 23:52:06,561 | INFO     | services.live_agent:664 | Cleaned up agent for session agent_a38a1c11-545b-4f36-b57b-815e42b76064.
+2026-03-15 23:52:06 2026-03-15 23:52:06,561 | INFO     | routers.agent:264 | WebSocket handler exited: session=agent_a38a1c11-545b-4f36-b57b-815e42b76064
+2026-03-15 23:52:06 GET 200 https://datalens-backend-844382502061.us-central1.run.app/sessions?type=data
+2026-03-15 23:52:06 2026-03-15 23:52:06,567 | ERROR    | services.gcs_service:451 | list_sessions Firestore error: File D:\Hackathon\DataLens\datalens\datalens-488301-c8474e701e91.json was not found.
+2026-03-15 23:52:06 INFO:     169.254.169.126:20184 - "GET /sessions?type=data HTTP/1.1" 200 OK
+2026-03-15 23:52:13 POST 201 https://datalens-backend-844382502061.us-central1.run.app/upload/file
+2026-03-15 23:52:15 2026-03-15 23:52:15,270 | WARNING  | services.profiler:286 | Failed to profile column 'explicit': numpy boolean subtract, the `-` operator, is not supported, use the bitwise_xor, the `^` operator, or the logical_xor function instead.
+2026-03-15 23:52:15 2026-03-15 23:52:15,545 | ERROR    | services.gcs_service:302 | save_session failed for 362c3574-e899-4fb3-b637-9ff18edbfca7: File D:\Hackathon\DataLens\datalens\datalens-488301-c8474e701e91.json was not found.
+2026-03-15 23:52:15 INFO:     169.254.169.126:48686 - "POST /upload/file HTTP/1.1" 201 Created
+2026-03-15 23:52:16 GET 200 https://datalens-backend-844382502061.us-central1.run.app/sessions?type=all
+2026-03-15 23:52:16 GET 200 https://datalens-backend-844382502061.us-central1.run.app/sessions?type=data
+2026-03-15 23:52:16 INFO:     Uvicorn running on http://0.0.0.0:8080 (Press CTRL+C to quit)
+2026-03-15 23:52:16 INFO:     Started parent process [2]
+2026-03-15 23:52:21 INFO:     Started server process [4]
+2026-03-15 23:52:21 INFO:     Started server process [5]
+2026-03-15 23:52:21 INFO:     Waiting for application startup.
+2026-03-15 23:52:21 INFO:     Waiting for application startup.
+2026-03-15 23:52:21 2026-03-15 23:52:21,602 | INFO     | main:135 | DataLens backend starting up?
+2026-03-15 23:52:21 2026-03-15 23:52:21,602 | INFO     | main:135 | DataLens backend starting up?
+2026-03-15 23:52:22 2026-03-15 23:52:22,779 | WARNING  | main:111 | GCS client init failed (will retry on first request): File D:\Hackathon\DataLens\datalens\datalens-488301-c8474e701e91.json was not found.
+2026-03-15 23:52:22 2026-03-15 23:52:22,779 | WARNING  | main:111 | GCS client init failed (will retry on first request): File D:\Hackathon\DataLens\datalens\datalens-488301-c8474e701e91.json was not found.
+2026-03-15 23:52:22 2026-03-15 23:52:22,780 | WARNING  | main:122 | Firestore client init failed (will retry on first request): File D:\Hackathon\DataLens\datalens\datalens-488301-c8474e701e91.json was not found.
+2026-03-15 23:52:22 2026-03-15 23:52:22,780 | WARNING  | main:122 | Firestore client init failed (will retry on first request): File D:\Hackathon\DataLens\datalens\datalens-488301-c8474e701e91.json was not found.
+2026-03-15 23:52:22 2026-03-15 23:52:22,780 | INFO     | main:143 | DataLens backend ready. Environment: project=datalens-488301, location=us-central1
+2026-03-15 23:52:22 2026-03-15 23:52:22,780 | INFO     | main:143 | DataLens backend ready. Environment: project=datalens-488301, location=us-central1
+2026-03-15 23:52:22 INFO:     Application startup complete.
+2026-03-15 23:52:22 INFO:     Application startup complete.
+2026-03-15 23:52:22 2026-03-15 23:52:22,796 | ERROR    | services.gcs_service:451 | list_sessions Firestore error: File D:\Hackathon\DataLens\datalens\datalens-488301-c8474e701e91.json was not found.
+2026-03-15 23:52:22 INFO:     169.254.169.126:26334 - "GET /sessions?type=data HTTP/1.1" 200 OK
+2026-03-15 23:52:22 2026-03-15 23:52:22,797 | ERROR    | services.gcs_service:451 | list_sessions Firestore error: File D:\Hackathon\DataLens\datalens\datalens-488301-c8474e701e91.json was not found.
+2026-03-15 23:52:22 INFO:     169.254.169.126:26352 - "GET /sessions?type=all HTTP/1.1" 200 OK
+2026-03-15 23:52:22 INFO:     169.254.169.126:26342 - "WebSocket /ws/agent/362c3574-e899-4fb3-b637-9ff18edbfca7?token=guest_d0a5db1b-2303-4d71-a32d-6bb0f9e529da" [accepted]
+2026-03-15 23:52:22 2026-03-15 23:52:22,800 | INFO     | routers.agent:68 | WebSocket connected: session=362c3574-e899-4fb3-b637-9ff18edbfca7, raw_token=guest_d0a5db1b-2303-4d71-a32d-6bb0f9e529da
+2026-03-15 23:52:22 2026-03-15 23:52:22,800 | INFO     | routers.agent:74 | WebSocket auth resolved token to owner_id=guest_d0a5db1b-2303-4d71-a32d-6bb0f9e529da using header=Guest guest_d0a5db1b-2303-4d71-a32d-6bb0f9e529da
+2026-03-15 23:52:22 INFO:     connection open
+2026-03-15 23:52:22 POST 200 https://datalens-backend-844382502061.us-central1.run.app/stories/generate
+2026-03-15 23:52:22 INFO:     169.254.169.126:26358 - "POST /stories/generate HTTP/1.1" 200 OK
+2026-03-15 23:52:22 2026-03-15 23:52:22,947 | INFO     | google_genai.models:7655 | AFC is enabled with max remote calls: 10.
+2026-03-15 23:52:22 2026-03-15 23:52:22,982 | INFO     | google_genai.models:7655 | AFC is enabled with max remote calls: 10.
+2026-03-15 23:52:23 2026-03-15 23:52:23,014 | INFO     | google_genai.models:7655 | AFC is enabled with max remote calls: 10.
+2026-03-15 23:52:33 2026-03-15 23:52:33,168 | INFO     | services.nano_banana:190 | Generating image for session=362c3574-e899-4fb3-b637-9ff18edbfca7 format=architecture prompt_len=1459
+2026-03-15 23:52:33 2026-03-15 23:52:33,200 | INFO     | google_genai.models:7481 | AFC is enabled with max remote calls: 10.
+2026-03-15 23:52:33 2026-03-15 23:52:33,920 | INFO     | services.nano_banana:190 | Generating image for session=362c3574-e899-4fb3-b637-9ff18edbfca7 format=eli5 prompt_len=1160
+2026-03-15 23:52:33 2026-03-15 23:52:33,956 | INFO     | google_genai.models:7481 | AFC is enabled with max remote calls: 10.
+2026-03-15 23:52:35 2026-03-15 23:52:35,206 | INFO     | services.nano_banana:190 | Generating image for session=362c3574-e899-4fb3-b637-9ff18edbfca7 format=eli5 prompt_len=1155
+2026-03-15 23:52:35 2026-03-15 23:52:35,236 | INFO     | google_genai.models:7481 | AFC is enabled with max remote calls: 10.
+2026-03-15 23:52:36 2026-03-15 23:52:36,978 | INFO     | services.nano_banana:190 | Generating image for session=362c3574-e899-4fb3-b637-9ff18edbfca7 format=architecture prompt_len=1705
+2026-03-15 23:52:37 2026-03-15 23:52:37,014 | INFO     | google_genai.models:7481 | AFC is enabled with max remote calls: 10.
+2026-03-15 23:52:37 2026-03-15 23:52:37,914 | ERROR    | services.gcs_service:207 | GCS image upload failed for 362c3574-e899-4fb3-b637-9ff18edbfca7/306b8575-b22f-441d-aedc-0e5f5d75204a.png: File D:\Hackathon\DataLens\datalens\datalens-488301-c8474e701e91.json was not found. ? falling back to local.
+2026-03-15 23:52:37 2026-03-15 23:52:37,915 | INFO     | services.nano_banana:232 | Image generated and uploaded: session=362c3574-e899-4fb3-b637-9ff18edbfca7 url=http://localhost:8080/images/local/362c3574-e899-4fb3-b637-9ff18edbfca7/306b8575-b22f-441d-aedc-0e5f5d75204a.png
+2026-03-15 23:52:39 2026-03-15 23:52:39,093 | ERROR    | services.gcs_service:207 | GCS image upload failed for 362c3574-e899-4fb3-b637-9ff18edbfca7/cafa202c-135a-400b-aa5d-5359c0ccad8e.png: File D:\Hackathon\DataLens\datalens\datalens-488301-c8474e701e91.json was not found. ? falling back to local.
+2026-03-15 23:52:39 2026-03-15 23:52:39,096 | INFO     | services.nano_banana:232 | Image generated and uploaded: session=362c3574-e899-4fb3-b637-9ff18edbfca7 url=http://localhost:8080/images/local/362c3574-e899-4fb3-b637-9ff18edbfca7/cafa202c-135a-400b-aa5d-5359c0ccad8e.png
+2026-03-15 23:52:39 2026-03-15 23:52:39,511 | INFO     | services.nano_banana:190 | Generating image for session=362c3574-e899-4fb3-b637-9ff18edbfca7 format=analyst prompt_len=1198
+2026-03-15 23:52:39 2026-03-15 23:52:39,536 | INFO     | google_genai.models:7481 | AFC is enabled with max remote calls: 10.
+2026-03-15 23:52:41 2026-03-15 23:52:41,872 | INFO     | services.nano_banana:190 | Generating image for session=362c3574-e899-4fb3-b637-9ff18edbfca7 format=analyst prompt_len=1249
+2026-03-15 23:52:41 2026-03-15 23:52:41,903 | INFO     | google_genai.models:7481 | AFC is enabled with max remote calls: 10.
+2026-03-15 23:52:42 2026-03-15 23:52:42,110 | ERROR    | services.gcs_service:207 | GCS image upload failed for 362c3574-e899-4fb3-b637-9ff18edbfca7/d1e795eb-af44-4aca-bec0-499512c9f573.png: File D:\Hackathon\DataLens\datalens\datalens-488301-c8474e701e91.json was not found. ? falling back to local.
+2026-03-15 23:52:42 2026-03-15 23:52:42,112 | INFO     | services.nano_banana:232 | Image generated and uploaded: session=362c3574-e899-4fb3-b637-9ff18edbfca7 url=http://localhost:8080/images/local/362c3574-e899-4fb3-b637-9ff18edbfca7/d1e795eb-af44-4aca-bec0-499512c9f573.png
+2026-03-15 23:52:42 2026-03-15 23:52:42,936 | ERROR    | services.gcs_service:207 | GCS image upload failed for 362c3574-e899-4fb3-b637-9ff18edbfca7/962df8f1-ab90-400b-9ef5-1ba80574d9ba.png: File D:\Hackathon\DataLens\datalens\datalens-488301-c8474e701e91.json was not found. ? falling back to local.
+2026-03-15 23:52:42 2026-03-15 23:52:42,939 | INFO     | services.nano_banana:232 | Image generated and uploaded: session=362c3574-e899-4fb3-b637-9ff18edbfca7 url=http://localhost:8080/images/local/362c3574-e899-4fb3-b637-9ff18edbfca7/962df8f1-ab90-400b-9ef5-1ba80574d9ba.png
+2026-03-15 23:52:45 2026-03-15 23:52:45,012 | ERROR    | services.gcs_service:207 | GCS image upload failed for 362c3574-e899-4fb3-b637-9ff18edbfca7/b86aec1f-f891-43ee-939b-a77fee8aa7c1.png: File D:\Hackathon\DataLens\datalens\datalens-488301-c8474e701e91.json was not found. ? falling back to local.
+2026-03-15 23:52:45 2026-03-15 23:52:45,016 | INFO     | services.nano_banana:232 | Image generated and uploaded: session=362c3574-e899-4fb3-b637-9ff18edbfca7 url=http://localhost:8080/images/local/362c3574-e899-4fb3-b637-9ff18edbfca7/b86aec1f-f891-43ee-939b-a77fee8aa7c1.png
+2026-03-15 23:52:48 2026-03-15 23:52:48,170 | ERROR    | services.gcs_service:207 | GCS image upload failed for 362c3574-e899-4fb3-b637-9ff18edbfca7/68643572-547a-4319-8bae-019db4f3cb6e.png: File D:\Hackathon\DataLens\datalens\datalens-488301-c8474e701e91.json was not found. ? falling back to local.
+2026-03-15 23:52:48 2026-03-15 23:52:48,171 | INFO     | services.nano_banana:232 | Image generated and uploaded: session=362c3574-e899-4fb3-b637-9ff18edbfca7 url=http://localhost:8080/images/local/362c3574-e899-4fb3-b637-9ff18edbfca7/68643572-547a-4319-8bae-019db4f3cb6e.png
+2026-03-15 23:52:48 POST 404 https://datalens-backend-844382502061.us-central1.run.app/stories/save
+2026-03-15 23:52:48 2026-03-15 23:52:48,239 | ERROR    | services.gcs_service:382 | load_session GCS error for 362c3574-e899-4fb3-b637-9ff18edbfca7: File D:\Hackathon\DataLens\datalens\datalens-488301-c8474e701e91.json was not found.
+2026-03-15 23:52:48 INFO:     169.254.169.126:9180 - "POST /stories/save HTTP/1.1" 404 Not Found

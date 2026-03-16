@@ -193,7 +193,7 @@ export function ImageGallery() {
   return (
     <>
       <div
-        className="flex-shrink-0 bg-white/90 dark:bg-slate-900/90 border-t border-slate-200 dark:border-slate-800/60 backdrop-blur-md transition-colors"
+        className="flex-shrink-0 w-full min-w-0 bg-white/90 dark:bg-slate-900/90 border-t border-slate-200 dark:border-slate-800/60 backdrop-blur-md transition-colors"
       >
         {/* Header */}
         <div className="flex items-center gap-3 px-4 pt-3 pb-2">

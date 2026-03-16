@@ -32,7 +32,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 # Load environment variables as early as possible so all modules see them
-load_dotenv(override=True)
+load_dotenv()
 
 # ---------------------------------------------------------------------------
 # Logging configuration
@@ -232,6 +232,25 @@ def create_app() -> FastAPI:
             status_code=500,
             content={"detail": "Internal server error. Please try again later."},
         )
+
+    # ------------------------------------------------------------------
+    # Frontend Static File Serving
+    # ------------------------------------------------------------------
+
+    if os.path.isdir("static"):
+        from fastapi.staticfiles import StaticFiles
+        from fastapi.responses import FileResponse
+
+        app.mount("/assets", StaticFiles(directory="static/assets"), name="assets")
+
+        @app.get("/{full_path:path}", include_in_schema=False)
+        async def serve_spa(full_path: str):
+            # API routes and explicitly mounted assets won't hit this catchfall
+            # Except if they 404. Let's redirect everything else to index.html for React Router
+            static_file_path = os.path.join("static", full_path)
+            if full_path and os.path.isfile(static_file_path):
+                return FileResponse(static_file_path)
+            return FileResponse("static/index.html")
 
     return app
 

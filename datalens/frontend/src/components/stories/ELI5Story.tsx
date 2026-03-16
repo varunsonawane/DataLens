@@ -129,7 +129,7 @@ export function ELI5Story() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="grid grid-cols-2 gap-3 mb-6"
+            className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6"
           >
             {resolvedELI5.map((img) => (
               <motion.div
@@ -160,7 +160,7 @@ export function ELI5Story() {
 
       {/* Pending image shimmer cards */}
       {pendingELI5.length > 0 && (
-        <div className="grid grid-cols-2 gap-3 mt-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-5">
           {pendingELI5.map(([id, p]) => (
             <div
               key={id}

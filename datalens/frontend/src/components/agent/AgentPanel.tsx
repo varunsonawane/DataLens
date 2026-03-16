@@ -338,11 +338,13 @@ export function AgentPanel({ variant = 'sidebar' }: AgentPanelProps) {
 
       {/* ── Chat History Panel (right side, only for AI assistant tab) ──── */}
       {dashboardMode === 'ai' && showHistoryPanel && (
-        <ChatHistoryPanel
-          onDragSession={(sessionId, filename) => {
-            // Visual feedback handled inside the panel
-          }}
-        />
+        <div className="hidden md:flex h-full flex-shrink-0">
+          <ChatHistoryPanel
+            onDragSession={(sessionId, filename) => {
+              // Visual feedback handled inside the panel
+            }}
+          />
+        </div>
       )}
     </div>
   );

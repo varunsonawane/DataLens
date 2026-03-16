@@ -47,7 +47,7 @@ export function StoryTabs() {
     <div className="flex flex-col h-full bg-slate-50 dark:bg-[#020617] transition-colors">
       {/* Tab bar */}
       <div
-        className="flex-shrink-0 flex items-center gap-1.5 px-6 py-4 bg-white/50 dark:bg-[#0f172a]/80 border-b border-slate-200 dark:border-white/5 backdrop-blur-md transition-colors z-10"
+        className="flex-shrink-0 flex items-center gap-1.5 px-3 sm:px-6 py-4 bg-white/50 dark:bg-[#0f172a]/80 border-b border-slate-200 dark:border-white/5 backdrop-blur-md transition-colors z-10 overflow-x-auto no-scrollbar"
       >
         <div className="flex items-center gap-2 flex-1">
           {TABS.map((tab) => {

@@ -136,7 +136,7 @@ export function Header() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -8, scale: 0.95 }}
                   transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                  className="absolute right-0 top-12 w-80 rounded-2xl shadow-2xl overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/60 z-50"
+                  className="absolute right-0 top-12 w-[calc(100vw-2rem)] sm:w-80 rounded-2xl shadow-2xl overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/60 z-50"
                 >
                   {/* Panel header */}
                   <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800/60">

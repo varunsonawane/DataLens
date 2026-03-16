@@ -109,22 +109,8 @@ export const MobileSidebar = ({
   const { sidebarOpen: open, toggleSidebar } = useThemeStore();
   return (
     <>
-      <div
-        className={cn(
-          "h-14 px-4 py-4 flex flex-row md:hidden items-center justify-between w-full bg-white dark:bg-[#0f172a] border-b border-slate-200 dark:border-white/5"
-        )}
-        {...props}
-      >
-        <div className="flex justify-end z-20 w-full mb-4">
-          <button
-            onClick={toggleSidebar}
-            className="w-10 h-10 flex items-center justify-center rounded-xl transition-colors hover:bg-slate-800/50 text-slate-400 hover:text-white"
-          >
-            {open ? <PanelLeftClose size={20} /> : <PanelLeft size={20} />}
-          </button>
-        </div>
-        <AnimatePresence>
-          {open && (
+      <AnimatePresence>
+        {open && (
             <motion.div
               initial={{ x: "-100%", opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
@@ -146,9 +132,8 @@ export const MobileSidebar = ({
               </div>
               {children}
             </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+        )}
+      </AnimatePresence>
     </>
   );
 };

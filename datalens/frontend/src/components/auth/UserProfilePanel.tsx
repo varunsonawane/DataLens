@@ -424,34 +424,6 @@ function AuthenticatedView({
           </div>
         </div>
 
-        {/* ── Sessions section ── */}
-        <div className="px-4 pb-4">
-          <div className="flex items-center justify-between mb-2.5">
-            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-              Recent Sessions
-            </p>
-            {sessions.length > 0 && (
-              <span className="text-[10px] text-slate-400 dark:text-slate-600">
-                {sessions.length} total
-              </span>
-            )}
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            {sessionsLoading ? (
-              <div className="flex items-center gap-2 text-slate-400 py-4 justify-center">
-                <Loader2 size={14} className="animate-spin text-emerald-500" />
-                <span className="text-xs">Loading sessions…</span>
-              </div>
-            ) : sessions.length === 0 ? (
-              <EmptySessionsState />
-            ) : (
-              sessions.slice(0, 6).map((s) => (
-                <SessionRow key={s.session_id} session={s} />
-              ))
-            )}
-          </div>
-        </div>
       </div>
 
       {/* ── Actions footer ── */}

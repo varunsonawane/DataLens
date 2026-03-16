@@ -93,7 +93,7 @@ export function Dashboard() {
                 </div>
                 {/* Image gallery — fixed-height bottom strip */}
                 <div
-                  className="flex-shrink-0 overflow-y-auto panel-scroll"
+                  className="flex-shrink-0 w-full min-w-0 overflow-y-auto panel-scroll"
                   style={{
                     height: '220px',
                     borderTop: '1px solid rgba(255,255,255,0.06)',
@@ -121,7 +121,9 @@ export function Dashboard() {
 
         {/* Right panel — Agent (only on session page) */}
         {dashboardMode === 'session' && (
-          <AgentPanel variant="sidebar" />
+          <div className="hidden lg:flex h-full">
+            <AgentPanel variant="sidebar" />
+          </div>
         )}
       </div>
     </div>

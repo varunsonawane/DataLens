@@ -213,7 +213,7 @@ export function AnalystStory() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="grid grid-cols-2 gap-3 mb-6"
+            className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6"
           >
             {resolvedAnalyst.map(img => (
               <motion.div key={img.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
@@ -247,7 +247,7 @@ export function AnalystStory() {
               );
             case 'kpi':
               return (
-                <div key={idx} className="grid grid-cols-2 sm:grid-cols-3 gap-3 my-4">
+                <div key={idx} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 my-4">
                   {(seg.kpis ?? []).map((k, ki) => <KPICard key={ki} kpi={k} index={ki} />)}
                 </div>
               );
@@ -279,7 +279,7 @@ export function AnalystStory() {
       </div>
 
       {pendingAnalyst.length > 0 && (
-        <div className="grid grid-cols-2 gap-3 mt-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-5">
           {pendingAnalyst.map(([id, p]) => (
             <div key={id} className="shimmer rounded-2xl aspect-video flex flex-col items-center justify-center p-4 border border-emerald-200 dark:border-emerald-500/10 bg-slate-50 dark:bg-slate-800/30 transition-colors">
               <div className="text-2xl mb-2">📊</div>
