@@ -9,9 +9,18 @@
 - **Live App:** [Try DataLens Live](https://datalens-backend-844382502061.us-central1.run.app/)
   - *Tip: You can use the provided [`spotify_tracks.csv`](./spotify_tracks.csv) as a sample dataset to test out the platform!*
 - **Live Demo Video:** 
-  [![Watch DataLens in Action (YouTube)](https://img.youtube.com/vi/fWmHkDYD4-4/0.jpg)](https://www.youtube.com/watch?v=fWmHkDYD4-4)
+
+
+
+https://github.com/user-attachments/assets/0e8462c2-fe1e-4d2c-83a2-7129eb9f45d3
+
+
+  
 - **Google Cloud Deployment Proof:** 
-  [![Architecture & Deployment (YouTube)](https://img.youtube.com/vi/LFAzdkaty1g/0.jpg)](https://www.youtube.com/watch?v=LFAzdkaty1g)
+
+
+
+https://github.com/user-attachments/assets/755dc445-6e34-412b-935a-2a9a27142667
 
 ---
 
