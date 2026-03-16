@@ -268,8 +268,8 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
   const handleFile = useCallback(
     async (file: File) => {
       const ext = file.name.split('.').pop()?.toLowerCase();
-      if (!['csv', 'xlsx', 'xls', 'json'].includes(ext || '')) {
-        setError('Only CSV, Excel, and JSON files are supported.');
+      if (!['csv', 'xlsx', 'xls', 'json', 'pdf', 'png', 'jpg', 'jpeg', 'webp', 'gif'].includes(ext || '')) {
+        setError('Only CSV, Excel, JSON, PDF and Image files are supported.');
         return;
       }
       setIsUploading(true);
@@ -471,7 +471,7 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept=".csv,.xlsx,.xls,.json,.pdf"
+                    accept=".csv,.xlsx,.xls,.json,.pdf,image/*"
                     className="hidden"
                     onChange={(e) => {
                       const f = e.target.files?.[0];

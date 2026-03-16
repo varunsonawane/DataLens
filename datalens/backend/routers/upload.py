@@ -38,7 +38,7 @@ router = APIRouter()
 # ---------------------------------------------------------------------------
 
 MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024  # 100 MB
-ALLOWED_EXTENSIONS = {".csv", ".xlsx", ".xls"}
+ALLOWED_EXTENSIONS = {".csv", ".xlsx", ".xls", ".json", ".pdf", ".png", ".jpg", ".jpeg", ".webp", ".gif"}
 
 # ---------------------------------------------------------------------------
 # Request / Response models
@@ -239,10 +239,10 @@ async def upload_file(
     owner_id: Optional[str] = Depends(get_owner_id),
 ):
     """
-    Accept a CSV or Excel file upload, profile it with Pandas, create a session.
+    Accept a CSV, Excel, JSON, PDF or Image file upload, profile it with Pandas, create a session.
 
     - Validates file extension and size
-    - Reads with pandas (CSV or openpyxl)
+    - Reads with pandas (CSV, JSON, openpyxl)
     - Calls profile_dataframe
     - Persists session to GCS + Firestore
     - Returns { session_id, filename, rows, columns, data_profile }
@@ -286,6 +286,23 @@ async def upload_file(
                     continue
             else:
                 raise ValueError("Could not decode CSV with utf-8, latin-1, or cp1252 encoding.")
+        elif suffix == ".json":
+            try:
+                df = pd.read_json(buf)
+            except Exception:
+                # Fallback to lines=True or manual parsing if standard read_json fails
+                buf.seek(0)
+                import json
+                data = json.load(buf)
+                if isinstance(data, dict):
+                    # If it's a single dict, wrap in a list
+                    df = pd.DataFrame([data])
+                else:
+                    df = pd.DataFrame(data)
+        elif suffix in (".pdf", ".png", ".jpg", ".jpeg", ".webp", ".gif"):
+            # For PDF/Images, create a dummy dataframe representing document metadata
+            # Or if it's meant to be processed via document AI later.
+            df = pd.DataFrame([{"filename": filename, "type": f"File ({suffix})", "size": len(content)}])
         else:
             df = pd.read_excel(buf, engine="openpyxl")
     except Exception as exc:
